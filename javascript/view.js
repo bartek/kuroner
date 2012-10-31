@@ -24,6 +24,7 @@ var Map = exports.Map = function(url) {
     var map = new tmx.Map(url);
     var mapController = new MapController();
 
+
     // Given the TMX Map we've loaded, go through each layer (via map.layers,
     // provided by gamejs), and return a LayerView that we can deal with.
     var layerViews = map.layers.map(function(layer) {

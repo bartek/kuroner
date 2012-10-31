@@ -12,6 +12,8 @@ var Unit = exports.Unit = function(pos, image, isPlayer) {
 
     this.rect = new gamejs.Rect(pos, imgSize)
 
+    this.velocity = 5;
+
     return this;
 };
 objects.extend(Unit, gamejs.sprite.Sprite);

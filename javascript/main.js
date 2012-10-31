@@ -23,20 +23,42 @@ var main = function() {
             true // isPlayer
         );
         units.add(unit);
+        return unit;
     };
 
-    spawn(
+    // meat!
+    var player = spawn(
         gamejs.image.load('images/meatboy.png'),
         true,
         null
     );
 
-    console.log(units);
+    var GameController = function(player) {
+        player.rect.left = 0
+        player.rect.top = 0
+
+        this.handle = function(event) {
+            if (event.type === gamejs.event.KEY_DOWN) {
+                if (event.key === gamejs.event.K_LEFT) {
+                    player.rect.left -= player.velocity;
+                } else if (event.key === gamejs.event.K_RIGHT) {
+                    player.rect.left += player.velocity;
+                } else if (event.key === gamejs.event.K_DOWN) {
+                    player.rect.top += player.velocity;
+                } else if (event.key === gamejs.event.K_UP) {
+                    player.rect.top -= player.velocity;
+                }
+            }
+        }
+        return this;
+    };
+
+    var gameController = new GameController(player);
 
     // The game loop
     var tick = function(msDuration) {
         gamejs.event.get().forEach(function(event) {
-            map.handle(event);
+            gameController.handle(event);
         });
         map.update(msDuration);
         units.update(msDuration);
