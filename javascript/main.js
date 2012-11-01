@@ -1,5 +1,6 @@
 var gamejs = require('gamejs');
 var view = require('./view');
+var input = require('./input');
 var Unit = require('./actors').Unit;
 
 gamejs.preload(['./data/tilesheet.png']);
@@ -33,27 +34,7 @@ var main = function() {
         null
     );
 
-    var GameController = function(player) {
-        player.rect.left = 0
-        player.rect.top = 0
-
-        this.handle = function(event) {
-            if (event.type === gamejs.event.KEY_DOWN) {
-                if (event.key === gamejs.event.K_LEFT) {
-                    player.rect.left -= player.velocity;
-                } else if (event.key === gamejs.event.K_RIGHT) {
-                    player.rect.left += player.velocity;
-                } else if (event.key === gamejs.event.K_DOWN) {
-                    player.rect.top += player.velocity;
-                } else if (event.key === gamejs.event.K_UP) {
-                    player.rect.top -= player.velocity;
-                }
-            }
-        }
-        return this;
-    };
-
-    var gameController = new GameController(player);
+    var gameController = new input.GameController(player);
 
     // The game loop
     var tick = function(msDuration) {
@@ -67,6 +48,8 @@ var main = function() {
         // Draw
         map.draw(display);
         units.draw(display);
+
+        player.angle = gameController.angle();
     };
     gamejs.time.fpsCallback(tick, this, 60);
 };
