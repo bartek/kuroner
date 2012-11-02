@@ -56,6 +56,13 @@ var GameController = exports.GameController = function(player) {
         return null;
     }
 
+    this.jumped = function() {
+        if (this.up) {
+            return true;
+        }
+        return false;
+    }
+
     return this;
 
 }

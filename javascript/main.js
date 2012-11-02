@@ -50,6 +50,7 @@ var main = function() {
         units.draw(display);
 
         player.angle = gameController.angle();
+        player.jumped = gameController.jumped();
     };
     gamejs.time.fpsCallback(tick, this, 60);
 };
