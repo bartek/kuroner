@@ -3,13 +3,11 @@ var view = require('./view');
 var input = require('./input');
 var Unit = require('./actors').Unit;
 
-gamejs.preload(['./data/tilesheet.png']);
-
 var main = function() {
     gamejs.display.setCaption('Game Off')
     var display = gamejs.display.setMode([800, 600]);
 
-    var map = new view.Map('./data/example.tmx');
+    var map = new view.Map('./data/grassland.tmx');
 
     var units = new gamejs.sprite.Group();
 
@@ -56,8 +54,11 @@ var main = function() {
 };
 
 var IMAGES = [
+    // World
+    './data/grasstilesheet.png',
     'images/meatboy.png'
 ];
+
 
 gamejs.preload(IMAGES);
 gamejs.ready(main);
