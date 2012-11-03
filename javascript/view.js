@@ -1,7 +1,21 @@
 var gamejs = require('gamejs');
 var tmx = require('gamejs/tmx');
+var objects = require('gamejs/utils/objects');
 
 // Loads the Map at `url` and holds all layers.
+var Tile = function(map, rect, properties) {
+    Tile.superConstructor.apply(this, arguments);
+
+    this.rect = rect;
+
+    if (properties && properties.collision) {
+        this.add(map.collisionable);
+    }
+
+    return this;
+};
+objects.extend(Tile, gamejs.sprite.Sprite);
+
 var Map = exports.Map = function(url) {
     // Draw each layer
     this.draw = function(display) {
@@ -20,15 +34,17 @@ var Map = exports.Map = function(url) {
         mapController.update(msDuration);
     };
 
+    this.collisionable = new gamejs.sprite.Group();
+
     // Initialize.
+    var self = this;
     var map = new tmx.Map(url);
     var mapController = new MapController();
-
 
     // Given the TMX Map we've loaded, go through each layer (via map.layers,
     // provided by gamejs), and return a LayerView that we can deal with.
     var layerViews = map.layers.map(function(layer) {
-        return new LayerView(layer, {
+        return new LayerView(self, layer, {
             tileWidth: map.tileWidth,
             tileHeight: map.tileHeight,
             width: map.width,
@@ -39,7 +55,7 @@ var Map = exports.Map = function(url) {
     return this;
 };
 
-var LayerView = function(layer, opts) {
+var LayerView = function(map, layer, opts) {
     this.draw = function(display, offset) {
         // `blit` basically means draw.
         display.blit(this.surface, offset);
@@ -60,13 +76,16 @@ var LayerView = function(layer, opts) {
                 return;
             }
 
+            var tileProperties = opts.tiles.getProperties(gid);
             var tileSurface = opts.tiles.getSurface(gid);
+
             if (tileSurface) {
-                this.surface.blit(tileSurface,
-                    new gamejs.Rect(
+                var tileRect = new gamejs.Rect(
                         [j * opts.tileWidth, i * opts.tileHeight],
                         [opts.tileWidth, opts.tileHeight]
-                    ));
+                );
+                this.surface.blit(tileSurface, tileRect);
+                var tile = new Tile(map, tileRect, tileProperties);
             } else {
                 gamejs.log('No GID ', gid, i, j, 'layer', i);
             }

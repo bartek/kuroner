@@ -25,7 +25,13 @@ var Unit = exports.Unit = function(pos, image, isPlayer) {
 };
 objects.extend(Unit, gamejs.sprite.Sprite);
 
-Unit.prototype.update = function(msDuration) {
+Unit.prototype.update = function(msDuration, map) {
+    // Check that this sprites group is not colliding with the map
+    var colliding = false;
+    gamejs.sprite.groupCollide(this.groups[0], map.collisionable).forEach(function(collision) {
+        colliding = true;
+        });
+
     // moveIp = move in place
     if (this.angle !== null) {
         this.rect.moveIp(
@@ -35,7 +41,11 @@ Unit.prototype.update = function(msDuration) {
     }
 
     // Play with gravity.
-    if (this.rect.y < 200) {
+    if (colliding) {
+        return;
+    }
+
+    if (this.rect.y < 800) {
         this.rect.moveIp(
             0, 
             Math.sin(Math.PI * 0.5) * this.speed * (msDuration / 1000)

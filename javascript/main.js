@@ -40,7 +40,7 @@ var main = function() {
             gameController.handle(event);
         });
         map.update(msDuration);
-        units.update(msDuration);
+        units.update(msDuration, map);
         display.clear();
 
         // Draw
