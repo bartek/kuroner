@@ -11,7 +11,6 @@ var main = function() {
     var map = new view.Map('./data/grassland.tmx');
 
     var units = new gamejs.sprite.Group();
-	console.debug('easy');
     // Spawn a character, normally our main player, but what if we 
     // want to introduce baddies?!
     var spawn = function(spriteSheet, isPlayer, yPos) {
@@ -25,13 +24,10 @@ var main = function() {
         units.add(unit);
         return unit;
     };
-	console.debug('check');
 	
-	var filename = 'images/meatboy.png';
-	var dimensions = {width:28, height:19};
-	console.debug('gonna make a spritesheet');
+	var filename = 'images/MegaMan7Sheet4.png';
+	var dimensions = {width:42, height:50};
 	var spriteSheet = new SpriteSheet(filename, dimensions);
-	console.debug('about to make a guy');
     // meat!
     var player = spawn(
         spriteSheet,
@@ -66,7 +62,8 @@ var main = function() {
 var IMAGES = [
     // World
     './data/grasstilesheet.png',
-    'images/meatboy.png'
+    'images/meatboy.png',
+    'images/MegaMan7Sheet4.png'
 ];
 
 
