@@ -22,7 +22,6 @@ var Unit = exports.Unit = function(pos, image, isPlayer) {
     this.canJump = false;
     this.onGround;
 
-    this.dx = 0.0;
     this.dy = 0.0;
 
     return this;
@@ -34,7 +33,7 @@ Unit.prototype.update = function(msDuration, map) {
     var colliding = false;
     gamejs.sprite.groupCollide(this.groups[0], map.collisionable).forEach(function(collision) {
         colliding = true;
-        });
+    });
 
     this.x = Math.round(this.rect.topright[0]);
     this.y = Math.round(this.rect.topright[1]);
@@ -47,7 +46,6 @@ Unit.prototype.update = function(msDuration, map) {
         );
     }
 
-    // Play with gravity.
     if (colliding) {
         this.onGround = true;
         this.dy = 0;
@@ -57,9 +55,8 @@ Unit.prototype.update = function(msDuration, map) {
 
     if (this.onGround) {
         if (this.jumped) {
-            console.log(this.x, this.y)
             if (this.canJump) {
-                this.dy = -8;
+                this.dy = -120; // This is the value to change to alter jump height
                 this.canJump = false;
             };
         } else {
@@ -80,8 +77,8 @@ Unit.prototype.update = function(msDuration, map) {
     };
 
     this.rect.moveIp(
-        this.dx,
+        0,
         this.dy
-        )
+    );
 };
 

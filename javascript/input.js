@@ -12,10 +12,10 @@ var GameController = exports.GameController = function(player) {
                 this.left = true;
             } else if (event.key === gamejs.event.K_RIGHT) {
                 this.right = true;
-            // } else if (event.key === gamejs.event.K_DOWN) {
-            //     this.down = true;
             } else if (event.key === gamejs.event.K_UP) {
                 this.up = true;
+            } else if (event.key === gamejs.event.K_SPACE) {
+                this.space = true;
             } else {
                 console.debug(event.key);
             }
@@ -24,10 +24,10 @@ var GameController = exports.GameController = function(player) {
                 this.left = false;
             } else if (event.key === gamejs.event.K_RIGHT) {
                 this.right = false;
-            // } else if (event.key === gamejs.event.K_DOWN) {
-            //     this.down = false;
             } else if (event.key === gamejs.event.K_UP) {
                 this.up = false;
+            } else if (event.key === gamejs.event.K_SPACE) {
+                this.space = false;
             } else {
                 console.debug(event.key);
             }
@@ -36,17 +36,10 @@ var GameController = exports.GameController = function(player) {
 
     // Get the angle depending on the keys currently pressed.
     this.angle = function() {
-        // if (this.up && this.left) {
-        //     return Math.PI + (Math.PI * 0.25);
-        // } else if (this.up && this.right) {
-        //     return Math.PI * -0.25;
-        // } else 
         if (this.down && this.left) {
             return Math.PI - (Math.PI * 0.25);
         } else if (this.down && this.right) {
             return Math.PI * 0.25;
-        // } else if (this.up) {
-        //     return Math.PI * 1.5;
         } else if (this.down) {
             return Math.PI * 0.5;
         } else  if (this.left) {
@@ -58,11 +51,18 @@ var GameController = exports.GameController = function(player) {
     }
 
     this.jumped = function() {
-        if (this.up) {
+        if (this.space) {
             return true;
         }
         return false;
     }
+
+    this.climb = function() {
+        if (this.up) {
+            return true;
+        }
+        return false;
+    };
 
     return this;
 
