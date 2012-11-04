@@ -16,6 +16,8 @@ var GameController = exports.GameController = function(player) {
                 this.up = true;
             } else if (event.key === gamejs.event.K_SPACE) {
                 this.space = true;
+            } else if (event.key === gamejs.event.K_r) {
+                this.r = true;
             } else {
                 console.debug(event.key);
             }
@@ -28,6 +30,8 @@ var GameController = exports.GameController = function(player) {
                 this.up = false;
             } else if (event.key === gamejs.event.K_SPACE) {
                 this.space = false;
+            } else if (event.key === gamejs.event.K_r) {
+                this.r = false;
             } else {
                 console.debug(event.key);
             }
@@ -62,7 +66,14 @@ var GameController = exports.GameController = function(player) {
             return true;
         }
         return false;
-    };
+    }
+
+    this.reset = function() {
+        if (this.r) {
+            return true;
+        }
+        return false;
+    }
 
     return this;
 

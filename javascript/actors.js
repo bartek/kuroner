@@ -7,7 +7,7 @@ var Unit = exports.Unit = function(pos, spriteSheet, isPlayer) {
     this.speed = 200;
 
     this.gravity = 150;
-    this.jump = 50;
+    this.jump = -12;
 
     this.angle = null;
 
@@ -28,24 +28,30 @@ var Unit = exports.Unit = function(pos, spriteSheet, isPlayer) {
 objects.extend(Unit, gamejs.sprite.Sprite);
 
 Unit.prototype.update = function(msDuration, map) {
-	this.animation.update(msDuration);
-	this.image = this.animation.image;
-    // Check that this sprites group is not colliding with the map
-    var colliding = false;
-    gamejs.sprite.groupCollide(this.groups[0], map.collisionable).forEach(function(collision) {
-        colliding = true;
-    });
+    // Sprite animation
+    this.animation.update(msDuration);
+    this.image = this.animation.image;
 
-    this.x = Math.round(this.rect.topright[0]);
-    this.y = Math.round(this.rect.topright[1]);
+    // Character reset
+    if (this.reset) {
+        this.dy = 0;
+        this.onGround = false;
+        this.rect.moveIp(-this.rect.topleft[0], -this.rect.topleft[1]);
+    }
 
-    // moveIp = move in place
+    // Basic directional movement
     if (this.angle !== null) {
         this.rect.moveIp(
             Math.cos(this.angle) * this.speed * (msDuration / 1000),
             Math.sin(this.angle) * this.speed * (msDuration / 1000)
         );
     }
+
+    // Collision detection and jumping
+    var colliding = false;
+    gamejs.sprite.groupCollide(this.groups[0], map.collisionable).forEach(function(collision) {
+        colliding = true;
+    });
 
     if (colliding) {
         this.onGround = true;
@@ -57,7 +63,7 @@ Unit.prototype.update = function(msDuration, map) {
     if (this.onGround) {
         if (this.jumped) {
             if (this.canJump) {
-                this.dy = -120; // This is the value to change to alter jump height
+                this.dy = this.jump; // This is the value to change to alter jump height
                 this.canJump = false;
             };
         } else {
@@ -81,6 +87,7 @@ Unit.prototype.update = function(msDuration, map) {
         0,
         this.dy
     );
+
 };
 
 var SpriteSheet = exports.SpriteSheet = function(imagePath, sheetSpec) {

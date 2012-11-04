@@ -56,6 +56,9 @@ var main = function() {
 		
         player.angle = gameController.angle();
         player.jumped = gameController.jumped();
+        player.climb = gameController.climb();
+        player.reset = gameController.reset();
+
     };
     gamejs.time.fpsCallback(tick, this, 60);
 };
