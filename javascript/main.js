@@ -10,8 +10,6 @@ var main = function() {
 	
     var map = new view.Map('./data/grassland.tmx');
 
-    var CollisionMap = require('./view').CollisionMap
-
     var units = new gamejs.sprite.Group();
     // Spawn a character, normally our main player, but what if we 
     // want to introduce baddies?!
