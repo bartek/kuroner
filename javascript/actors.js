@@ -1,5 +1,6 @@
-var gamejs = require('gamejs');
-var objects = require('gamejs/utils/objects');
+var gamejs = require('gamejs')
+    , objects = require('gamejs/utils/objects')
+    , CollisionMap = require('./view').CollisionMap;
 
 var Unit = exports.Unit = function(pos, spriteSheet, isPlayer) {
     Unit.superConstructor.apply(this, arguments);
@@ -27,7 +28,7 @@ var Unit = exports.Unit = function(pos, spriteSheet, isPlayer) {
 };
 objects.extend(Unit, gamejs.sprite.Sprite);
 
-Unit.prototype.update = function(msDuration, map) {
+Unit.prototype.update = function(msDuration) {
     // Sprite animation
     this.animation.update(msDuration);
     this.image = this.animation.image;
@@ -53,12 +54,9 @@ Unit.prototype.update = function(msDuration, map) {
     }
 
     // Collision detection and jumping
-    var colliding = false;
-    gamejs.sprite.groupCollide(this.groups[0], map.collisionable).forEach(function(collision) {
-        colliding = true;
-    });
+    this.colliding = CollisionMap.collisionTest(this);
 
-    if (colliding) {
+    if (this.colliding) {
         this.onGround = true;
         this.dy = 0;
     } else {
@@ -92,7 +90,6 @@ Unit.prototype.update = function(msDuration, map) {
         0,
         this.dy
     );
-
 };
 
 var SpriteSheet = exports.SpriteSheet = function(imagePath, sheetSpec) {

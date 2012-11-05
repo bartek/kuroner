@@ -3,6 +3,7 @@ var gamejs = require('gamejs');
 // A class to allow the player to control their character.
 var GameController = exports.GameController = function(player) {
     this.player = player;
+    this.direction = null;
 
     this.up = this.down = this.left = this.right  = false;
 

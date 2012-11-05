@@ -1,16 +1,30 @@
-var gamejs = require('gamejs');
-var tmx = require('gamejs/tmx');
-var objects = require('gamejs/utils/objects');
+var gamejs = require('gamejs')
+    , tmx = require('gamejs/tmx')
+    , objects = require('gamejs/utils/objects');
+
+// Store tiles that can be collided with 
+var CollisionMapCollection = function() {
+    this.tiles = new gamejs.sprite.Group();
+};
+
+CollisionMapCollection.prototype.pushOrIgnore = function(tile) {
+    if (tile.properties && tile.properties.collision) {
+        this.tiles.add(tile)
+    }
+};
+
+CollisionMapCollection.prototype.collisionTest = function(sprite) {
+    var isColliding = gamejs.sprite.groupCollide(sprite.groups[0], this.tiles).length;
+    return isColliding > 0
+};
+var CollisionMap = exports.CollisionMap = new CollisionMapCollection();
 
 // Loads the Map at `url` and holds all layers.
-var Tile = function(map, rect, properties) {
+var Tile = function(rect, properties) {
     Tile.superConstructor.apply(this, arguments);
 
     this.rect = rect;
-
-    if (properties && properties.collision) {
-        this.add(map.collisionable);
-    }
+    this.properties = properties;
 
     return this;
 };
@@ -33,8 +47,6 @@ var Map = exports.Map = function(url) {
     this.update = function(msDuration) {
         mapController.update(msDuration);
     };
-
-    this.collisionable = new gamejs.sprite.Group();
 
     // Initialize.
     var self = this;
@@ -85,7 +97,10 @@ var LayerView = function(map, layer, opts) {
                         [opts.tileWidth, opts.tileHeight]
                 );
                 this.surface.blit(tileSurface, tileRect);
-                var tile = new Tile(map, tileRect, tileProperties);
+                var tile = new Tile(tileRect, tileProperties);
+
+                // Push or ignore the tile. Only kept if its relevant.
+                CollisionMap.pushOrIgnore(tile);
             } else {
                 gamejs.log('No GID ', gid, i, j, 'layer', i);
             }

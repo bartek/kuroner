@@ -1,14 +1,16 @@
-var gamejs = require('gamejs');
-var view = require('./view');
-var input = require('./input');
-var Unit = require('./actors').Unit;
-var SpriteSheet = require('./actors').SpriteSheet;
+var gamejs = require('gamejs')
+    , view = require('./view')
+    , input = require('./input')
+    , Unit = require('./actors').Unit
+    , SpriteSheet = require('./actors').SpriteSheet;
 
 var main = function() {
     gamejs.display.setCaption('Game Off')
     var display = gamejs.display.setMode([800, 600]);
 	
     var map = new view.Map('./data/grassland.tmx');
+
+    var CollisionMap = require('./view').CollisionMap
 
     var units = new gamejs.sprite.Group();
     // Spawn a character, normally our main player, but what if we 
@@ -24,7 +26,7 @@ var main = function() {
         units.add(unit);
         return unit;
     };
-	
+
 	var filename = 'images/MegaMan7Sheet4.png';
 	var dimensions = {width:42, height:50};
 	var spriteSheet = new SpriteSheet(filename, dimensions);
@@ -34,7 +36,6 @@ var main = function() {
         true,
         null
     );
-	console.debug('made a guy');
     var gameController = new input.GameController(player);
 
     // The game loop
@@ -43,10 +44,10 @@ var main = function() {
             gameController.handle(event);
         });
         map.update(msDuration);
-        units.update(msDuration, map);
-        display.clear();
+        units.update(msDuration);
 
         // Draw
+        display.clear();
         map.draw(display);
         units.draw(display);
 		
