@@ -29,7 +29,11 @@ var main = function() {
 	var filename = 'images/MegaMan7Sheet4.png';
 	var dimensions = {width:42, height:50};
 	var spriteSheet = new SpriteSheet(filename, dimensions);
-    var player_animation = {'static': [0], 'running':[5,14]}
+    var player_animation = {
+        'static': [0],
+        'running':[5,14],
+        'jumping':[18],
+    }
 //Rise!
     var player = spawn(
         spriteSheet,
@@ -52,7 +56,11 @@ var main = function() {
         map.draw(display);
         units.draw(display);
 		
-        player.angle = gameController.angle();
+        //Get the input values from the game controller and apply to player
+        //undefined angle is bad - only set angle when it's defined
+        if (typeof gameController.angle() !== "undefined") {
+            player.angle = gameController.angle();
+        }
         player.isRunning = gameController.isRunning();
         player.jumped = gameController.jumped();
         player.climb = gameController.climb();

@@ -6,9 +6,10 @@ var terminalVelocity = 10;
 
 var Unit = exports.Unit = function(pos, spriteSheet, isPlayer, animation) {
     Unit.superConstructor.apply(this, arguments);
-		
-    this.accel = 10;
-    this.decel = 1;
+	
+    //Accel & Decel are a fraction of max speed added per tick - between 0 and 1
+    this.accel = 0.1;
+    this.decel = 0.1;
     this.speed = 0;
 
     this.maxSpeed = 200;
@@ -61,7 +62,7 @@ Unit.prototype.update = function(msDuration) {
     // Basic directional movement
     if (this.isRunning) {
         if (this.speed <= this.maxSpeed) {
-            this.speed += this.accel;
+            this.speed += (this.accel * this.maxSpeed);
         }
         if (this.speed > this.maxSpeed) {
             this.speed = this.maxSpeed;
@@ -72,7 +73,7 @@ Unit.prototype.update = function(msDuration) {
     } else {
         this.animation.start('static');
         if (this.speed >= 0) {
-            this.speed -= this.decel;
+            this.speed -= (this.decel * this.maxSpeed);
         }
         if (this.speed < 0) {
             this.speed = 0;
@@ -81,11 +82,6 @@ Unit.prototype.update = function(msDuration) {
     if (this.speed == 0) {
         this.angle = null;
     }
-
-    this.rect.moveIp(
-        Math.cos(this.angle) * this.speed * (msDuration / 1000),
-        Math.sin(this.angle) * this.speed * (msDuration / 1000)
-    );
 
     // Collision detection and jumping
     this.colliding = CollisionMap.collisionTest(this);
@@ -120,9 +116,13 @@ Unit.prototype.update = function(msDuration) {
         this.dy = terminalVelocity;
     };
 
+    if (!this.onGround && this.currentAnimation!='jumping' ) {
+        this.animation.start('jumping');
+    }
+
     this.rect.moveIp(
-        0,
-        this.dy
+        Math.cos(this.angle) * this.speed * (msDuration / 1000),
+        Math.sin(this.angle) * this.speed * (msDuration / 1000) + this.dy
     );
 };
 
