@@ -13,26 +13,29 @@ var main = function() {
     var units = new gamejs.sprite.Group();
     // Spawn a character, normally our main player, but what if we 
     // want to introduce baddies?!
-    var spawn = function(spriteSheet, isPlayer, yPos) {
+    var spawn = function(spriteSheet, isPlayer, yPos, animation) {
         var pos = [0, 0];
         
         var unit = new Unit(
             pos,
             spriteSheet,
-            true // isPlayer
+            true, // isPlayer
+            animation
         );
         units.add(unit);
         return unit;
     };
-
+//The nitty gritties of our player character
 	var filename = 'images/MegaMan7Sheet4.png';
 	var dimensions = {width:42, height:50};
 	var spriteSheet = new SpriteSheet(filename, dimensions);
-    // meat!
+    var player_animation = {'static': [0], 'running':[5,14]}
+//Rise!
     var player = spawn(
         spriteSheet,
         true,
-        null
+        null,
+        player_animation
     );
     var gameController = new input.GameController(player);
 
@@ -50,6 +53,7 @@ var main = function() {
         units.draw(display);
 		
         player.angle = gameController.angle();
+        player.isRunning = gameController.isRunning();
         player.jumped = gameController.jumped();
         player.climb = gameController.climb();
         player.reset = gameController.reset();

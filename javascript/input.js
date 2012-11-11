@@ -52,7 +52,13 @@ var GameController = exports.GameController = function(player) {
         } else if (this.right) {
             return 0;
         }
-        return null;
+    }
+
+    this.isRunning = function() {
+        if (this.left || this.right) {
+            return true;
+        }
+        return false;
     }
 
     this.jumped = function() {
