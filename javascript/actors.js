@@ -2,10 +2,16 @@ var gamejs = require('gamejs')
     , objects = require('gamejs/utils/objects')
     , CollisionMap = require('./view').CollisionMap;
 
-var Unit = exports.Unit = function(pos, spriteSheet, isPlayer) {
+var terminalVelocity = 10;
+
+var Unit = exports.Unit = function(pos, spriteSheet, isPlayer, animation) {
     Unit.superConstructor.apply(this, arguments);
 		
-    this.speed = 200;
+    this.accel = 10;
+    this.decel = 1;
+    this.speed = 0;
+
+    this.maxSpeed = 200;
 
     this.gravity = 150;
     this.jump = -12;
@@ -13,14 +19,17 @@ var Unit = exports.Unit = function(pos, spriteSheet, isPlayer) {
     this.angle = null;
 
     this.origImage = spriteSheet.get(0);
-	this.animation = new Animation(spriteSheet,
-		{'static': [0], 'running':[5,14]}, 12);
+	this.animation = new Animation(spriteSheet, animation, 12);
 	this.animation.start('static');
 		
     this.rect = new gamejs.Rect(pos, [42,50]);
 
+    //Action state attributes
     this.canJump = false;
     this.onGround;
+    this.isRunning;
+
+    this.direction = 'right';
 
     this.dy = 0.0;
 
@@ -40,18 +49,43 @@ Unit.prototype.update = function(msDuration) {
         this.rect.moveIp(-this.rect.topleft[0], -this.rect.topleft[1]);
     }
 
+    if (this.angle == Math.PI) {
+        this.direction = 'left';
+    } else if (this.angle == 0) {
+        this.direction = 'right';
+    }
+
+    if (this.direction == 'left') {
+        this.image = gamejs.transform.flip(this.image, true, false);
+    }
     // Basic directional movement
-    if (this.angle !== null) {
-        this.rect.moveIp(
-            Math.cos(this.angle) * this.speed * (msDuration / 1000),
-            Math.sin(this.angle) * this.speed * (msDuration / 1000)
-        );
+    if (this.isRunning) {
+        if (this.speed <= this.maxSpeed) {
+            this.speed += this.accel;
+        }
+        if (this.speed > this.maxSpeed) {
+            this.speed = this.maxSpeed;
+        }
         if (this.animation.currentAnimation != 'running') {
             this.animation.start('running');
         }
     } else {
         this.animation.start('static');
+        if (this.speed >= 0) {
+            this.speed -= this.decel;
+        }
+        if (this.speed < 0) {
+            this.speed = 0;
+        }
     }
+    if (this.speed == 0) {
+        this.angle = null;
+    }
+
+    this.rect.moveIp(
+        Math.cos(this.angle) * this.speed * (msDuration / 1000),
+        Math.sin(this.angle) * this.speed * (msDuration / 1000)
+    );
 
     // Collision detection and jumping
     this.colliding = CollisionMap.collisionTest(this);
@@ -82,8 +116,8 @@ Unit.prototype.update = function(msDuration) {
         this.dy -=  0.1;
     };
 
-    if (this.dy > 5) {
-        this.dy = 5;
+    if (this.dy > terminalVelocity) {
+        this.dy = terminalVelocity;
     };
 
     this.rect.moveIp(
