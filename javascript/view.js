@@ -2,19 +2,64 @@ var gamejs = require('gamejs')
     , tmx = require('gamejs/tmx')
     , objects = require('gamejs/utils/objects');
 
+
+/*
+* Each tile can hold a "block" property detailing its desired
+* blocking behaviour. Possible blocking data values are:
+* - "none" -> Tile does not block.
+* - "always" -> Tile blocks.
+* - "north" -> Tile does not allow to go through its north border.
+* - "east" -> Tile does not allow to go through its east border.
+* - "south" -> Tile does not allow to go through its south border.
+* - "west" -> Tile does not allow to go through its west border.
+*
+* Several restrictions can be added separated by commas; for example,
+* an upper left corner should be "west,north". Restrictions are
+* cumulative, so, for example, "west,always" would be the same as
+* "always" and "east,none,north" would be the same as "east,north".
+* 
+* Map layers may have also a "block" property with one of the following
+* values:
+* - "never" : Tiles in this layer never block.
+* - "always" : Tiles in this layer always block.
+* - "tileset" : Tiles in this layer block as it is indicated by the tileset.
+*
+* Note that "never" and "always" override any blocking information associated
+* to a tile. This property cannot be changed in runtime.
+*/
+var BLOCK = {
+    none: parseInt('0000', 2),
+    north: parseInt('0001', 2),
+    east: parseInt('0001', 2),
+    south: parseInt('0100', 2),
+    west: parseInt('1000', 2),
+    always: parseInt('1111', 2)
+};
+
 // Store tiles that can be collided with 
 var CollisionMapCollection = function() {
     this.tiles = new gamejs.sprite.Group();
 };
 
 CollisionMapCollection.prototype.pushOrIgnore = function(tile) {
-    if (tile.properties && tile.properties.collision) {
+    if (tile.properties && tile.properties.block) {
         this.tiles.add(tile)
     }
 };
 
 CollisionMapCollection.prototype.collisionTest = function(sprite) {
+    // Check if the passed sprite is colliding with any of our blocking
+    // tiles. 
+    // TODO: For now, we assume each tile is "always" blocking. So, it blocks from
+    // all directions. 
+    // This collisionTest needs to know the direction of the sprite first 
+    // in order to provide a better answer.
     var isColliding = gamejs.sprite.groupCollide(sprite.groups[0], this.tiles).length;
+
+    // Should be be checking the sprites rect.x and rect.y for anything?
+
+    //gamejs.log("isColliding?", isColliding);
+    gamejs.log("isColliding?", isColliding);
     return isColliding > 0
 };
 var CollisionMap = exports.CollisionMap = new CollisionMapCollection();

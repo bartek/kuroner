@@ -7,7 +7,6 @@ var Unit = exports.Unit = function(pos, spriteSheet, isPlayer) {
 		
     this.speed = 200;
 
-    this.gravity = 150;
     this.jump = -12;
 
     this.angle = null;
@@ -17,10 +16,15 @@ var Unit = exports.Unit = function(pos, spriteSheet, isPlayer) {
 		{'static': [0], 'running':[5,14]}, 12);
 	this.animation.start('static');
 		
-    this.rect = new gamejs.Rect(pos, [42,50]);
+    this.rect = new gamejs.Rect(pos, [42, 50]);
 
     this.canJump = false;
     this.onGround;
+
+    // Gravity, velocity, etc.
+    this.gravity = 150;
+    this.ySpeed = 0;
+    this.xSpeed = 0;
 
     this.dy = 0.0;
 
@@ -56,27 +60,28 @@ Unit.prototype.update = function(msDuration) {
     // Collision detection and jumping
     this.colliding = CollisionMap.collisionTest(this);
 
+    // We're probably jumping 
+    if (this.ySpeed == 0) {
+    } else {
+        this.rect.moveIp(0, this.ySpeed);
+    }
+    /*
     if (this.colliding) {
-        this.onGround = true;
+        //this.onGround = true;
         this.dy = 0;
     } else {
-        this.onGround = false;
+        //this.onGround = false;
+        this.dy += 0.5;
     }
 
-    if (this.onGround) {
-        if (this.jumped) {
-            if (this.canJump) {
-                this.dy = this.jump; // This is the value to change to alter jump height
-                this.canJump = false;
-            };
-        } else {
-            this.canJump = true;
-        }
-    };
-
-    if (!this.onGround) {
-        this.dy += 0.5;
-    };
+    if (this.jumped) {
+        if (this.canJump) {
+            this.dy = this.jump; // This is the value to change to alter jump height
+            this.canJump = false;
+        };
+    } else {
+        this.canJump = true;
+    }
 
     if (this.jumped && !this.onGround && this.dy > 0) {
         this.dy -=  0.1;
@@ -85,11 +90,7 @@ Unit.prototype.update = function(msDuration) {
     if (this.dy > 5) {
         this.dy = 5;
     };
-
-    this.rect.moveIp(
-        0,
-        this.dy
-    );
+    */
 };
 
 var SpriteSheet = exports.SpriteSheet = function(imagePath, sheetSpec) {
