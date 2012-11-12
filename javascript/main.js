@@ -11,34 +11,63 @@ var main = function() {
     var map = new view.Map('./data/grassland.tmx');
 
     var units = new gamejs.sprite.Group();
+    var objs = new gamejs.sprite.Group();
     // Spawn a character, normally our main player, but what if we 
     // want to introduce baddies?!
-    var spawn = function(spriteSheet, isPlayer, yPos, animation) {
-        var pos = [0, 0];
+    var spawn = function(spriteSheet, isPlayer, pos, animation) {
         
         var unit = new Unit(
             pos,
             spriteSheet,
-            true, // isPlayer
+            isPlayer, // isPlayer
             animation
         );
         units.add(unit);
         return unit;
     };
+    var objs_spawn = function(spriteSheet, isPlayer, pos, animation) {
+        
+        var unit = new Unit(
+            pos,
+            spriteSheet,
+            isPlayer, // isPlayer
+            animation
+        );
+        objs.add(unit);
+        return unit;
+    };
+
+    var rock_file = 'images/rock.png';
+    var rock_dims = {width:32, height:32};
+    var rock_pos = [100,0];
+    var rock_sheet = new SpriteSheet(rock_file, rock_dims);
+    var rock_anims = {
+        'static': [0],
+        'running': [0],
+        'jumping': [0]
+    };
+    var rock = objs_spawn(
+        rock_sheet,
+        false,
+        rock_pos,
+        rock_anims
+    );
+    
 //The nitty gritties of our player character
 	var filename = 'images/MegaMan7Sheet4.png';
 	var dimensions = {width:42, height:50};
-	var spriteSheet = new SpriteSheet(filename, dimensions);
+    var player_pos = [0, 0];
+	var player_spriteSheet = new SpriteSheet(filename, dimensions);
     var player_animation = {
         'static': [0],
         'running':[5,14],
-        'jumping':[18],
-    }
+        'jumping':[18]
+    };
 //Rise!
     var player = spawn(
-        spriteSheet,
+        player_spriteSheet,
         true,
-        null,
+        player_pos,
         player_animation
     );
     var gameController = new input.GameController(player);
@@ -50,11 +79,13 @@ var main = function() {
         });
         map.update(msDuration);
         units.update(msDuration);
+        objs.update(msDuration);
 
         // Draw
         display.clear();
         map.draw(display);
         units.draw(display);
+        objs.draw(display);
 		
         //Get the input values from the game controller and apply to player
         //undefined angle is bad - only set angle when it's defined
@@ -74,7 +105,8 @@ var IMAGES = [
     // World
     './data/grasstilesheet.png',
     'images/meatboy.png',
-    'images/MegaMan7Sheet4.png'
+    'images/MegaMan7Sheet4.png',
+    'images/rock.png',
 ];
 
 

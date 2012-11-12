@@ -22,8 +22,10 @@ var Unit = exports.Unit = function(pos, spriteSheet, isPlayer, animation) {
     this.origImage = spriteSheet.get(0);
 	this.animation = new Animation(spriteSheet, animation, 12);
 	this.animation.start('static');
-		
-    this.rect = new gamejs.Rect(pos, [42,50]);
+    //To prevent image blurring from decimal position, object has exact_rect to store exact position
+    //and rect, which will always be a whole-integer-rounded version of exact_rect - only rect is rendered
+    this.rect = new gamejs.Rect(pos, [spriteSheet.width, spriteSheet.height]);
+    this.exact_rect = new gamejs.Rect(this.rect);
 
     //Action state attributes
     this.canJump = false;
@@ -33,7 +35,7 @@ var Unit = exports.Unit = function(pos, spriteSheet, isPlayer, animation) {
     this.direction = 'right';
 
     this.dy = 0.0;
-
+    console.log(pos);
     return this;
 };
 objects.extend(Unit, gamejs.sprite.Sprite);
@@ -120,10 +122,13 @@ Unit.prototype.update = function(msDuration) {
         this.animation.start('jumping');
     }
 
-    this.rect.moveIp(
+    this.exact_rect.moveIp(
         Math.cos(this.angle) * this.speed * (msDuration / 1000),
         Math.sin(this.angle) * this.speed * (msDuration / 1000) + this.dy
     );
+    //Set the position of the rendered rectangle to a rounded version of the exact rect
+    this.rect.top = Math.round(this.exact_rect.top);
+    this.rect.left = Math.round(this.exact_rect.left);
 };
 
 var SpriteSheet = exports.SpriteSheet = function(imagePath, sheetSpec) {
@@ -131,16 +136,16 @@ var SpriteSheet = exports.SpriteSheet = function(imagePath, sheetSpec) {
       return surfaceCache[id];
    };
 
-   var width = sheetSpec.width;
-   var height = sheetSpec.height;
+   this.width = sheetSpec.width;
+   this.height = sheetSpec.height;
    var image = gamejs.image.load(imagePath);
    var surfaceCache = [];
-   var imgSize = new gamejs.Rect([0,0],[width,height]);
+   var imgSize = new gamejs.Rect([0,0],[this.width,this.height]);
    // extract the single images from big spritesheet image
-   for (var i=0; i<image.rect.height; i+=height) {
-       for (var j=0;j<image.rect.width;j+=width) {
-         var surface = new gamejs.Surface([width, height]);
-         var rect = new gamejs.Rect(j, i, width, height);
+   for (var i=0; i<image.rect.height; i+=this.height) {
+       for (var j=0;j<image.rect.width;j+=this.width) {
+         var surface = new gamejs.Surface([this.width, this.height]);
+         var rect = new gamejs.Rect(j, i, this.width, this.height);
          surface.blit(image, imgSize, rect);
          surfaceCache.push(surface);
       }
