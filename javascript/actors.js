@@ -39,14 +39,6 @@ var Unit = exports.Unit = function(pos, spriteSheet, isPlayer, animation) {
 
     this.dy = 0.0;
 
-    // Gravity, velocity, etc.
-    /*
-     * Merged, but kept from master. This is gone now?
-    this.gravity = 150;
-    this.ySpeed = 0;
-    this.xSpeed = 0;
-
-    */
     this.directions = {
       up: false,
       down: false,
@@ -71,6 +63,7 @@ Unit.prototype.update = function(msDuration) {
         this.rect.moveIp(-this.rect.topleft[0], -this.rect.topleft[1]);
     }
 
+    // Rustic direction checking.
     if (this.exact_rect.y === this.previousY) {
       this.directions.down = false;
       this.directions.up = false;
@@ -119,20 +112,19 @@ Unit.prototype.update = function(msDuration) {
     }
 
     // Collision detection and jumping
-
-    // The direction of the player can be figured out by comparing current and
-    // previous coordinates.
     this.colliding = CollisionMap.collisionTest(this);
 
-    // We're probably jumping 
-    if (this.ySpeed == 0) {
-    } else {
-        this.rect.moveIp(0, this.ySpeed);
-    }
-
+    // We need to check if the object is colliding, but also from which side,
+    // otherwise it gets really wonky trying to determine how we want to handle
+    // dy, etc.
     if (this.colliding) {
-      this.onGround = true;
-      this.dy = 0;
+      if (this.directions.down) {
+        this.onGround = true;
+        this.dy = 0;
+      } else if (this.directions.up) {
+        // This is a stub. TODO
+        this.onGround = false;
+      }
     } else {
       this.onGround = false;
     }
