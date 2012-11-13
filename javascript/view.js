@@ -18,12 +18,6 @@ var gamejs = require('gamejs')
 * cumulative, so, for example, "west,always" would be the same as
 * "always" and "east,none,north" would be the same as "east,north".
 * 
-* Map layers may have also a "block" property with one of the following
-* values:
-* - "never" : Tiles in this layer never block.
-* - "always" : Tiles in this layer always block.
-* - "tileset" : Tiles in this layer block as it is indicated by the tileset.
-*
 * Note that "never" and "always" override any blocking information associated
 * to a tile. This property cannot be changed in runtime.
 */
@@ -47,20 +41,14 @@ CollisionMapCollection.prototype.pushOrIgnore = function(tile) {
     }
 };
 
+// Check if the passed sprite is colliding with any of our blocking tiles.
 CollisionMapCollection.prototype.collisionTest = function(sprite) {
-    // Check if the passed sprite is colliding with any of our blocking
-    // tiles. 
     // TODO: For now, we assume each tile is "always" blocking. So, it blocks from
     // all directions. 
-    // This collisionTest needs to know the direction of the sprite first 
-    // in order to provide a better answer.
-    var isColliding = gamejs.sprite.groupCollide(sprite.groups[0], this.tiles).length;
-
-    // Should be be checking the sprites rect.x and rect.y for anything?
+    var isColliding = gamejs.sprite.groupCollide(sprite.groups[0], this.tiles);
 
     //gamejs.log("isColliding?", isColliding);
-    gamejs.log("isColliding?", isColliding);
-    return isColliding > 0
+    return isColliding.length > 0
 };
 var CollisionMap = exports.CollisionMap = new CollisionMapCollection();
 

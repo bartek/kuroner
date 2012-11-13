@@ -2,32 +2,59 @@ var gamejs = require('gamejs')
     , objects = require('gamejs/utils/objects')
     , CollisionMap = require('./view').CollisionMap;
 
-var Unit = exports.Unit = function(pos, spriteSheet, isPlayer) {
+var terminalVelocity = 10;
+
+var Unit = exports.Unit = function(pos, spriteSheet, isPlayer, animation) {
     Unit.superConstructor.apply(this, arguments);
-		
-    this.speed = 200;
+	
+    // Accel & Decel are a fraction of max speed added per tick - between 0 and 1
+    this.accel = 0.1;
+    this.decel = 0.1;
+    this.speed = 0;
+    this.isPlayer = isPlayer;
+
+    this.maxSpeed = 200;
 
     this.jump = -12;
 
     this.angle = null;
 
     this.origImage = spriteSheet.get(0);
-	this.animation = new Animation(spriteSheet,
-		{'static': [0], 'running':[5,14]}, 12);
-	this.animation.start('static');
-		
-    this.rect = new gamejs.Rect(pos, [42, 50]);
+    this.animation = new Animation(spriteSheet, animation, 12);
+    this.animation.start('static');
 
+    // To prevent image blurring from decimal position, object has exact_rect to 
+    // store exact position and rect, which will always be a whole-integer-rounded 
+    // version of exact_rect - only rect is rendered
+    this.rect = new gamejs.Rect(pos, [spriteSheet.width, spriteSheet.height]);
+    this.exact_rect = new gamejs.Rect(this.rect);
+
+    this.previousX = this.rect.x;
+    this.previousY = this.rect.y;
+
+    // Action state attributes
     this.canJump = false;
     this.onGround;
+    this.isRunning;
+
+    this.dy = 0.0;
 
     // Gravity, velocity, etc.
+    /*
+     * Merged, but kept from master. This is gone now?
     this.gravity = 150;
     this.ySpeed = 0;
     this.xSpeed = 0;
 
-    this.dy = 0.0;
+    */
+    this.directions = {
+      up: false,
+      down: false,
+      right: false,
+      left: false
+    };
 
+    console.log(pos);
     return this;
 };
 objects.extend(Unit, gamejs.sprite.Sprite);
@@ -37,27 +64,64 @@ Unit.prototype.update = function(msDuration) {
     this.animation.update(msDuration);
     this.image = this.animation.image;
 
-    // Character reset
+    // DEBUG: Character reset
     if (this.reset) {
         this.dy = 0;
         this.onGround = false;
         this.rect.moveIp(-this.rect.topleft[0], -this.rect.topleft[1]);
     }
 
+    if (this.exact_rect.y === this.previousY) {
+      this.directions.down = false;
+      this.directions.up = false;
+    } else if (this.exact_rect.y > this.previousY) {
+      this.directions.down = true;
+      this.directions.up = false;
+    } else if (this.exact_rect.y < this.previousY) {
+      this.directions.down = false;
+      this.directions.up = true;
+    }
+
+    if (this.angle == Math.PI) {
+      this.directions.left = true;
+      this.directions.right = false;
+    } else if (this.angle == 0) {
+      this.directions.right = true;
+      this.directions.left = false;
+    }
+
+    if (this.directions.left) {
+        this.image = gamejs.transform.flip(this.image, true, false);
+    }
+
     // Basic directional movement
-    if (this.angle !== null) {
-        this.rect.moveIp(
-            Math.cos(this.angle) * this.speed * (msDuration / 1000),
-            Math.sin(this.angle) * this.speed * (msDuration / 1000)
-        );
+    if (this.isRunning) {
+        if (this.speed <= this.maxSpeed) {
+            this.speed += (this.accel * this.maxSpeed);
+        }
+        if (this.speed > this.maxSpeed) {
+            this.speed = this.maxSpeed;
+        }
         if (this.animation.currentAnimation != 'running') {
             this.animation.start('running');
         }
     } else {
         this.animation.start('static');
+        if (this.speed >= 0) {
+            this.speed -= (this.decel * this.maxSpeed);
+        }
+        if (this.speed < 0) {
+            this.speed = 0;
+        }
+    }
+    if (this.speed == 0) {
+        this.angle = null;
     }
 
     // Collision detection and jumping
+
+    // The direction of the player can be figured out by comparing current and
+    // previous coordinates.
     this.colliding = CollisionMap.collisionTest(this);
 
     // We're probably jumping 
@@ -65,32 +129,53 @@ Unit.prototype.update = function(msDuration) {
     } else {
         this.rect.moveIp(0, this.ySpeed);
     }
-    /*
+
     if (this.colliding) {
-        //this.onGround = true;
-        this.dy = 0;
+      this.onGround = true;
+      this.dy = 0;
     } else {
-        //this.onGround = false;
-        this.dy += 0.5;
+      this.onGround = false;
     }
 
-    if (this.jumped) {
+    if (this.onGround) {
+      if (this.jumped) {
         if (this.canJump) {
-            this.dy = this.jump; // This is the value to change to alter jump height
-            this.canJump = false;
+          this.dy = this.jump; // This is the value to change to alter jump height
+          this.canJump = false;
         };
-    } else {
+      } else {
         this.canJump = true;
-    }
+      }
+    };
+
+    if (!this.onGround) {
+        this.dy += 0.5;
+    };
 
     if (this.jumped && !this.onGround && this.dy > 0) {
         this.dy -=  0.1;
     };
 
-    if (this.dy > 5) {
-        this.dy = 5;
+    if (this.dy > terminalVelocity) {
+        this.dy = terminalVelocity;
     };
-    */
+
+    if (!this.onGround && this.currentAnimation!='jumping' ) {
+        this.animation.start('jumping');
+    }
+
+    this.previousX = this.exact_rect.x;
+    this.previousY = this.exact_rect.y;
+
+    this.exact_rect.moveIp(
+        Math.cos(this.angle) * this.speed * (msDuration / 1000),
+        Math.sin(this.angle) * this.speed * (msDuration / 1000) + this.dy
+    );
+
+    // Set the position of the rendered rectangle to a rounded version of the 
+    // exact rect
+    this.rect.top = Math.round(this.exact_rect.top);
+    this.rect.left = Math.round(this.exact_rect.left);
 };
 
 var SpriteSheet = exports.SpriteSheet = function(imagePath, sheetSpec) {
@@ -98,16 +183,16 @@ var SpriteSheet = exports.SpriteSheet = function(imagePath, sheetSpec) {
       return surfaceCache[id];
    };
 
-   var width = sheetSpec.width;
-   var height = sheetSpec.height;
+   this.width = sheetSpec.width;
+   this.height = sheetSpec.height;
    var image = gamejs.image.load(imagePath);
    var surfaceCache = [];
-   var imgSize = new gamejs.Rect([0,0],[width,height]);
+   var imgSize = new gamejs.Rect([0,0],[this.width,this.height]);
    // extract the single images from big spritesheet image
-   for (var i=0; i<image.rect.height; i+=height) {
-       for (var j=0;j<image.rect.width;j+=width) {
-         var surface = new gamejs.Surface([width, height]);
-         var rect = new gamejs.Rect(j, i, width, height);
+   for (var i=0; i<image.rect.height; i+=this.height) {
+       for (var j=0;j<image.rect.width;j+=this.width) {
+         var surface = new gamejs.Surface([this.width, this.height]);
+         var rect = new gamejs.Rect(j, i, this.width, this.height);
          surface.blit(image, imgSize, rect);
          surfaceCache.push(surface);
       }
