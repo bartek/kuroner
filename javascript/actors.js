@@ -6,18 +6,28 @@ var terminalVelocity = 10;
 
 var Unit = exports.Unit = function(pos, spriteSheet, isPlayer, animation) {
     Unit.superConstructor.apply(this, arguments);
-	
+
     // Accel & Decel are a fraction of max speed added per tick - between 0 and 1
     this.accel = 0.1;
     this.decel = 0.1;
     this.speed = 0;
+
     this.isPlayer = isPlayer;
+
+    // Player states
+    this.isFalling = false;
+    this.isAscending = false;
+    this.isGrounded = false;
+
+    // States controlled by the controller.
+    this.isRunning;
+    this.jumped;
+    this.angle = null;
 
     this.maxSpeed = 200;
 
-    this.jump = -12;
-
-    this.angle = null;
+    // The lower, the higher we jump. Strange?
+    this.jumpHeight = -12;
 
     this.origImage = spriteSheet.get(0);
     this.animation = new Animation(spriteSheet, animation, 12);
@@ -29,13 +39,11 @@ var Unit = exports.Unit = function(pos, spriteSheet, isPlayer, animation) {
     this.rect = new gamejs.Rect(pos, [spriteSheet.width, spriteSheet.height]);
     this.exact_rect = new gamejs.Rect(this.rect);
 
-    this.previousX = this.rect.x;
-    this.previousY = this.rect.y;
+    this.previousX = this.exact_rect.x;
+    this.previousY = this.exact_rect.y;
 
     // Action state attributes
     this.canJump = false;
-    this.onGround;
-    this.isRunning;
 
     this.dy = 0.0;
 
@@ -59,6 +67,32 @@ Unit.prototype.setCollisionPoints= function() {
     };
 };
 
+Unit.prototype.setState = function() {
+    // Reset
+    this.isFalling = false;
+    this.isGrounded = false;
+    this.isAscending = false;
+
+    /* ---------------------
+     * Unit States
+     * ---------------------
+     */
+    if (this.exact_rect.y === this.previousY) {
+      this.isGrounded = true;
+    } else if (this.exact_rect.y > this.previousY) {
+      this.isFalling = true;
+    } else if (this.exact_rect.y < this.previousY) {
+      this.isAscending = true;
+    }
+}
+
+Unit.prototype.setDirection = function() {
+    /* ---------------------
+     * Determine user direction based on states.
+     * ---------------------
+     */
+}
+
 Unit.prototype.update = function(msDuration) {
     // Sprite animation
     this.animation.update(msDuration);
@@ -67,9 +101,11 @@ Unit.prototype.update = function(msDuration) {
     // DEBUG: Character reset
     if (this.reset) {
         this.dy = 0;
-        this.onGround = false;
+        this.isGrounded = false;
         this.rect.moveIp(-this.rect.topleft[0], -this.rect.topleft[1]);
     }
+
+    this.setState();
 
     // Rustic direction checking.
     if (this.exact_rect.y === this.previousY) {
@@ -130,20 +166,20 @@ Unit.prototype.update = function(msDuration) {
     // dy, etc.
     if (this.colliding.length > 0) {
       if (this.colliding.indexOf("bottom") > -1) {
-        this.onGround = true;
+        this.isGrounded = true;
         this.dy = 0;
       } else if (this.directions.up) {
         // This is a stub. TODO
-        this.onGround = false;
+        this.isGrounded = false;
       }
     } else {
-      this.onGround = false;
+      this.isGrounded = false;
     }
 
-    if (this.onGround) {
+    if (this.isGrounded) {
       if (this.jumped) {
         if (this.canJump) {
-          this.dy = this.jump; // This is the value to change to alter jump height
+          this.dy = this.jumpHeight;
           this.canJump = false;
         };
       } else {
@@ -151,11 +187,11 @@ Unit.prototype.update = function(msDuration) {
       }
     };
 
-    if (!this.onGround) {
+    if (!this.isGrounded) {
         this.dy += 0.5;
     };
 
-    if (this.jumped && !this.onGround && this.dy > 0) {
+    if (this.jumped && !this.isGrounded && this.dy > 0) {
         this.dy -=  0.1;
     };
 
@@ -163,7 +199,7 @@ Unit.prototype.update = function(msDuration) {
         this.dy = terminalVelocity;
     };
 
-    if (!this.onGround && this.currentAnimation!='jumping' ) {
+    if (!this.isGrounded && this.currentAnimation!='jumping' ) {
         this.animation.start('jumping');
     }
 
