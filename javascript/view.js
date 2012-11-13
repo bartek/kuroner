@@ -53,7 +53,7 @@ CollisionMapCollection.prototype.collisionTest = function(sprite) {
 
     collisions.forEach(function(collision) {
       // Tile is below the players hot spot.
-      if ((!sprite.directions.up) && (collision.b.rect.top > sprite.collisionPoints.H)) {
+      if ((!sprite.isAscending) && (collision.b.rect.top > sprite.collisionPoints.H)) {
         collidingAt.push("bottom");
       }
     });

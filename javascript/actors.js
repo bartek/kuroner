@@ -18,6 +18,8 @@ var Unit = exports.Unit = function(pos, spriteSheet, isPlayer, animation) {
     this.isFalling = false;
     this.isAscending = false;
     this.isGrounded = false;
+    this.isMovingLeft = false;
+    this.isMovingRight = false;
 
     // States controlled by the controller.
     this.isRunning;
@@ -47,13 +49,6 @@ var Unit = exports.Unit = function(pos, spriteSheet, isPlayer, animation) {
 
     this.dy = 0.0;
 
-    this.directions = {
-      up: false,
-      down: false,
-      right: false,
-      left: false
-    };
-
     console.log(pos);
     return this;
 };
@@ -72,6 +67,8 @@ Unit.prototype.setState = function() {
     this.isFalling = false;
     this.isGrounded = false;
     this.isAscending = false;
+    this.isMovingLeft = false;
+    this.isMovingRight = false;
 
     /* ---------------------
      * Unit States
@@ -84,13 +81,12 @@ Unit.prototype.setState = function() {
     } else if (this.exact_rect.y < this.previousY) {
       this.isAscending = true;
     }
-}
 
-Unit.prototype.setDirection = function() {
-    /* ---------------------
-     * Determine user direction based on states.
-     * ---------------------
-     */
+    if (this.angle == Math.PI) {
+      this.isMovingLeft = true;
+    } else if (this.angle == 0) {
+      this.isMovingRight = true;
+    }
 }
 
 Unit.prototype.update = function(msDuration) {
@@ -107,27 +103,7 @@ Unit.prototype.update = function(msDuration) {
 
     this.setState();
 
-    // Rustic direction checking.
-    if (this.exact_rect.y === this.previousY) {
-      this.directions.down = false;
-      this.directions.up = false;
-    } else if (this.exact_rect.y > this.previousY) {
-      this.directions.down = true;
-      this.directions.up = false;
-    } else if (this.exact_rect.y < this.previousY) {
-      this.directions.down = false;
-      this.directions.up = true;
-    }
-
-    if (this.angle == Math.PI) {
-      this.directions.left = true;
-      this.directions.right = false;
-    } else if (this.angle == 0) {
-      this.directions.right = true;
-      this.directions.left = false;
-    }
-
-    if (this.directions.left) {
+    if (this.isMovingLeft) {
         this.image = gamejs.transform.flip(this.image, true, false);
     }
 
@@ -168,7 +144,7 @@ Unit.prototype.update = function(msDuration) {
       if (this.colliding.indexOf("bottom") > -1) {
         this.isGrounded = true;
         this.dy = 0;
-      } else if (this.directions.up) {
+      } else if (this.isAscending) {
         // This is a stub. TODO
         this.isGrounded = false;
       }
