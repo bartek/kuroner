@@ -7,7 +7,7 @@ var terminalVelocity = 10;
 var Unit = exports.Unit = function(pos, spriteSheet, isPlayer, animation) {
     Unit.superConstructor.apply(this, arguments);
 	
-    //Accel & Decel are a fraction of max speed added per tick - between 0 and 1
+    // Accel & Decel are a fraction of max speed added per tick - between 0 and 1
     this.accel = 0.1;
     this.decel = 0.1;
     this.speed = 0;
@@ -20,14 +20,16 @@ var Unit = exports.Unit = function(pos, spriteSheet, isPlayer, animation) {
     this.angle = null;
 
     this.origImage = spriteSheet.get(0);
-	this.animation = new Animation(spriteSheet, animation, 12);
-	this.animation.start('static');
-    //To prevent image blurring from decimal position, object has exact_rect to store exact position
-    //and rect, which will always be a whole-integer-rounded version of exact_rect - only rect is rendered
+    this.animation = new Animation(spriteSheet, animation, 12);
+    this.animation.start('static');
+
+    // To prevent image blurring from decimal position, object has exact_rect to 
+    // store exact position and rect, which will always be a whole-integer-rounded 
+    // version of exact_rect - only rect is rendered
     this.rect = new gamejs.Rect(pos, [spriteSheet.width, spriteSheet.height]);
     this.exact_rect = new gamejs.Rect(this.rect);
 
-    //Action state attributes
+    // Action state attributes
     this.canJump = false;
     this.onGround;
     this.isRunning;
@@ -45,12 +47,16 @@ Unit.prototype.update = function(msDuration) {
     this.animation.update(msDuration);
     this.image = this.animation.image;
 
-    // Character reset
+    // DEBUG: Character reset
     if (this.reset) {
         this.dy = 0;
         this.onGround = false;
         this.rect.moveIp(-this.rect.topleft[0], -this.rect.topleft[1]);
     }
+
+    // The direction of the player can be figured out by comparing current and
+    // previous coordinates.
+
 
     if (this.angle == Math.PI) {
         this.direction = 'left';
@@ -89,21 +95,21 @@ Unit.prototype.update = function(msDuration) {
     this.colliding = CollisionMap.collisionTest(this);
 
     if (this.colliding) {
-        this.onGround = true;
-        this.dy = 0;
+      this.onGround = true;
+      this.dy = 0;
     } else {
-        this.onGround = false;
+      this.onGround = false;
     }
 
     if (this.onGround) {
-        if (this.jumped) {
-            if (this.canJump) {
-                this.dy = this.jump; // This is the value to change to alter jump height
-                this.canJump = false;
-            };
-        } else {
-            this.canJump = true;
-        }
+      if (this.jumped) {
+        if (this.canJump) {
+          this.dy = this.jump; // This is the value to change to alter jump height
+          this.canJump = false;
+        };
+      } else {
+        this.canJump = true;
+      }
     };
 
     if (!this.onGround) {
@@ -126,7 +132,9 @@ Unit.prototype.update = function(msDuration) {
         Math.cos(this.angle) * this.speed * (msDuration / 1000),
         Math.sin(this.angle) * this.speed * (msDuration / 1000) + this.dy
     );
-    //Set the position of the rendered rectangle to a rounded version of the exact rect
+
+    // Set the position of the rendered rectangle to a rounded version of the 
+    // exact rect
     this.rect.top = Math.round(this.exact_rect.top);
     this.rect.left = Math.round(this.exact_rect.left);
 };
