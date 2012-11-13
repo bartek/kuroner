@@ -42,13 +42,22 @@ CollisionMapCollection.prototype.pushOrIgnore = function(tile) {
 };
 
 // Check if the passed sprite is colliding with any of our blocking tiles.
+// Return an object telling us where the collision is happening, so we can
+// propel the sprite in the right direction.
 CollisionMapCollection.prototype.collisionTest = function(sprite) {
     // TODO: For now, we assume each tile is "always" blocking. So, it blocks from
     // all directions. 
-    var isColliding = gamejs.sprite.groupCollide(sprite.groups[0], this.tiles);
+    var collisions = gamejs.sprite.groupCollide(sprite.groups[0], this.tiles);
 
-    //gamejs.log("isColliding?", isColliding);
-    return isColliding.length > 0
+    var collidingAt = [];
+
+    collisions.forEach(function(collision) {
+      // Tile is below the players hot spot.
+      if ((!sprite.directions.up) && (collision.b.rect.top > sprite.collisionPoints.H)) {
+        collidingAt.push("bottom");
+      }
+    });
+    return collidingAt;
 };
 var CollisionMap = exports.CollisionMap = new CollisionMapCollection();
 

@@ -51,6 +51,14 @@ var Unit = exports.Unit = function(pos, spriteSheet, isPlayer, animation) {
 };
 objects.extend(Unit, gamejs.sprite.Sprite);
 
+
+// Various locations on the sprite that are used for collision detecting.
+Unit.prototype.setCollisionPoints= function() {
+    this.collisionPoints = {
+     H: this.exact_rect.y + (this.exact_rect.height - 10)
+    };
+};
+
 Unit.prototype.update = function(msDuration) {
     // Sprite animation
     this.animation.update(msDuration);
@@ -114,11 +122,14 @@ Unit.prototype.update = function(msDuration) {
     // Collision detection and jumping
     this.colliding = CollisionMap.collisionTest(this);
 
+    // We have the side of the tile the player is colliding with. With this, we
+    // can determine if we should stop them on the ground, let them continue
+    // falling, etc.
     // We need to check if the object is colliding, but also from which side,
     // otherwise it gets really wonky trying to determine how we want to handle
     // dy, etc.
-    if (this.colliding) {
-      if (this.directions.down) {
+    if (this.colliding.length > 0) {
+      if (this.colliding.indexOf("bottom") > -1) {
         this.onGround = true;
         this.dy = 0;
       } else if (this.directions.up) {
@@ -168,6 +179,8 @@ Unit.prototype.update = function(msDuration) {
     // exact rect
     this.rect.top = Math.round(this.exact_rect.top);
     this.rect.left = Math.round(this.exact_rect.left);
+
+    this.setCollisionPoints();
 };
 
 var SpriteSheet = exports.SpriteSheet = function(imagePath, sheetSpec) {
