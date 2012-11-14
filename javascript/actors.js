@@ -1,4 +1,5 @@
 var gamejs = require('gamejs')
+    , config = require('./config').config
     , objects = require('gamejs/utils/objects')
     , CollisionMap = require('./view').CollisionMap;
 
@@ -57,9 +58,30 @@ objects.extend(Unit, gamejs.sprite.Sprite);
 
 // Various locations on the sprite that are used for collision detecting.
 Unit.prototype.setCollisionPoints= function() {
+    // These numbers are kind of hacky. The reason the exact_rect width/height
+    // is larger than the actual sprite is because all frames in the animation
+    // must be the same size, and that makes the rect larger than it should be.
     this.collisionPoints = {
-     H: this.exact_rect.y + (this.exact_rect.height - 10)
+     // Hot spot for ground collisions
+     H: {
+      x: this.exact_rect.x + ((this.exact_rect.width / 2) - 5),
+      y: this.exact_rect.y + (this.exact_rect.height - 10)
+     },
+     // Right top side of the player
+     R: {
+      x: this.exact_rect.x + this.exact_rect.width - 10,
+      y: this.exact_rect.y + 15
+     }
     };
+
+    // Draw the collision points for reference.
+    if (config.debug) {
+      var hRect = new gamejs.Rect(
+        [this.collisionPoints.R.x, this.collisionPoints.R.y],
+        [5, 5]
+      );
+      gamejs.draw.rect(this.image, '#ff00cc', hRect);
+    }
 };
 
 Unit.prototype.setState = function() {
@@ -141,11 +163,28 @@ Unit.prototype.update = function(msDuration) {
     // otherwise it gets really wonky trying to determine how we want to handle
     // dy, etc.
     if (this.colliding.length > 0) {
-      if (this.colliding.indexOf("bottom") > -1) {
-        this.isGrounded = true;
-        this.dy = 0;
+      var colBottom = this.colliding.indexOf("bottom") > -1;
+      var colRight = this.colliding.indexOf("right") > -1;
+
+      var actBottom = function(that) {
+        that.isGrounded = true;
+        that.dy = 0;
+      }
+
+      var actRight = function(that) {
+        that.speed = 0;
+      }
+
+      // This is going to get messy, checking so many directions. Better ideas?
+      if (colBottom && colRight) {
+        gamejs.log("Bottom and right collision");
+        actBottom(this);
+        actRight(this);
+      } else if (colBottom) {
+        actBottom(this);
+      } else if (colRight) {
+        actRight(this);
       } else if (this.isAscending) {
-        // This is a stub. TODO
         this.isGrounded = false;
       }
     } else {

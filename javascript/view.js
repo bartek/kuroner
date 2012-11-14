@@ -49,15 +49,18 @@ CollisionMapCollection.prototype.collisionTest = function(sprite) {
     // all directions. 
     var collisions = gamejs.sprite.groupCollide(sprite.groups[0], this.tiles);
 
-    var collidingAt = [];
+    var collidingAt = {};
 
     collisions.forEach(function(collision) {
       // Tile is below the players hot spot.
-      if ((!sprite.isAscending) && (collision.b.rect.top > sprite.collisionPoints.H)) {
-        collidingAt.push("bottom");
+      if ((!sprite.isAscending) && (collision.b.rect.top > sprite.collisionPoints.H.y)) {
+        collidingAt.bottom = true;
+      // Tile is to the right of the player right side.
+      } else if ((sprite.isMovingRight) && (collision.b.rect.left > sprite.collisionPoints.R.x)) {
+        collidingAt.right = true;
       }
     });
-    return collidingAt;
+    return Object.keys(collidingAt);
 };
 var CollisionMap = exports.CollisionMap = new CollisionMapCollection();
 
