@@ -33,11 +33,18 @@ var BLOCK = {
 // Store tiles that can be collided with 
 var CollisionMapCollection = function() {
     this.tiles = new gamejs.sprite.Group();
+    this.deadlyTiles = new gamejs.sprite.Group();
 };
 
+// Add tiles that can block the player into the blockable tiles group.
 CollisionMapCollection.prototype.pushOrIgnore = function(tile) {
-    if (tile.properties && tile.properties.block) {
+    if (tile.properties) {
+      if (tile.properties.block) {
         this.tiles.add(tile)
+      }
+      if (tile.properties.pain) {
+        this.deadlyTiles.add(tile);
+      }
     }
 };
 
@@ -45,19 +52,21 @@ CollisionMapCollection.prototype.pushOrIgnore = function(tile) {
 // Return an object telling us where the collision is happening, so we can
 // propel the sprite in the right direction.
 CollisionMapCollection.prototype.collisionTest = function(sprite) {
+    // How about testing for collisions with deadly tiles?
     // TODO: For now, we assume each tile is "always" blocking. So, it blocks from
     // all directions. 
-    var collisions = gamejs.sprite.groupCollide(sprite.groups[0], this.tiles);
-
+    var collisions = gamejs.sprite.spriteCollide(sprite, this.tiles);
     var collidingAt = {};
 
     collisions.forEach(function(collision) {
       // Tile is below the players hot spot.
-      if ((!sprite.isAscending) && (collision.b.rect.top > sprite.collisionPoints.H.y)) {
+      if ((!sprite.isAscending) && (collision.rect.top > sprite.collisionPoints.H.y)) {
         collidingAt.bottom = true;
       // Tile is to the right of the player right side.
-      } else if ((sprite.isMovingRight) && (collision.b.rect.left > sprite.collisionPoints.R.x)) {
+      } else if ((sprite.isMovingRight) && (collision.rect.left > sprite.collisionPoints.R.x)) {
         collidingAt.right = true;
+      } else if ((sprite.isMovingLeft) && (collision.rect.left < sprite.collisionPoints.L.x)) {
+        collidingAt.left = true;
       }
     });
     return Object.keys(collidingAt);

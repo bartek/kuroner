@@ -71,16 +71,26 @@ Unit.prototype.setCollisionPoints= function() {
      R: {
       x: this.exact_rect.x + this.exact_rect.width - 10,
       y: this.exact_rect.y + 15
+     },
+     L: {
+      x: this.exact_rect.x + 5,
+      y: this.exact_rect.y + 15
      }
     };
 
     // Draw the collision points for reference.
     if (config.debug) {
-      var hRect = new gamejs.Rect(
+      var rRect = new gamejs.Rect(
         [this.collisionPoints.R.x, this.collisionPoints.R.y],
         [5, 5]
       );
-      gamejs.draw.rect(this.image, '#ff00cc', hRect);
+      gamejs.draw.rect(this.image, '#ff00cc', rRect);
+
+      var lRect = new gamejs.Rect(
+        [this.collisionPoints.L.x, this.collisionPoints.L.y],
+        [5, 5]
+      );
+      gamejs.draw.rect(this.image, '#ff00cc', lRect);
     }
 };
 
@@ -165,6 +175,7 @@ Unit.prototype.update = function(msDuration) {
     if (this.colliding.length > 0) {
       var colBottom = this.colliding.indexOf("bottom") > -1;
       var colRight = this.colliding.indexOf("right") > -1;
+      var colLeft = this.colliding.indexOf("left") > -1;
 
       var actBottom = function(that) {
         that.isGrounded = true;
@@ -175,15 +186,28 @@ Unit.prototype.update = function(msDuration) {
         that.speed = 0;
       }
 
+      var actLeft = function(that) {
+        that.speed = 0;
+      }
+
+      // TODO: Note. Perhaps use the BLOCKS idea to determine which directions
+      // of collisions are happening. Then, we can simply call the correct
+      // functions instead of managing a massive if statement.
+
       // This is going to get messy, checking so many directions. Better ideas?
       if (colBottom && colRight) {
         gamejs.log("Bottom and right collision");
         actBottom(this);
         actRight(this);
+      } else if (colBottom && colLeft) {
+        actBottom(this);
+        actLeft(this);
       } else if (colBottom) {
         actBottom(this);
       } else if (colRight) {
         actRight(this);
+      } else if (colLeft) {
+        actLeft(this);
       } else if (this.isAscending) {
         this.isGrounded = false;
       }
