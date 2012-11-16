@@ -5,7 +5,7 @@ var gamejs = require('gamejs')
 
 var terminalVelocity = 10;
 
-var Unit = exports.Unit = function(pos, spriteSheet, isPlayer, animation) {
+var Unit = function(pos, spriteSheet, animation) {
     Unit.superConstructor.apply(this, arguments);
 
     // Accel & Decel are a fraction of max speed added per tick - between 0 and 1
@@ -13,14 +13,14 @@ var Unit = exports.Unit = function(pos, spriteSheet, isPlayer, animation) {
     this.decel = 0.1;
     this.speed = 0;
 
-    this.isPlayer = isPlayer;
-
     // Player states
     this.isFalling = false;
     this.isAscending = false;
     this.isGrounded = false;
     this.isMovingLeft = false;
     this.isMovingRight = false;
+    this.isGrabbing = false;
+    this.canDrop = false;
 
     // States controlled by the controller.
     this.isRunning;
@@ -54,7 +54,6 @@ var Unit = exports.Unit = function(pos, spriteSheet, isPlayer, animation) {
     return this;
 };
 objects.extend(Unit, gamejs.sprite.Sprite);
-
 
 // Various locations on the sprite that are used for collision detecting.
 Unit.prototype.setCollisionPoints= function() {
@@ -105,8 +104,6 @@ Unit.prototype.setState = function() {
     this.isFalling = false;
     this.isGrounded = false;
     this.isAscending = false;
-    this.isMovingLeft = false;
-    this.isMovingRight = false;
 
     /* ---------------------
      * Unit States
@@ -121,8 +118,10 @@ Unit.prototype.setState = function() {
 
     if (this.angle == Math.PI) {
       this.isMovingLeft = true;
+      this.isMovingRight = false;
     } else if (this.angle == 0) {
       this.isMovingRight = true;
+      this.isMovingLeft = false;
     }
 }
 
@@ -140,32 +139,8 @@ Unit.prototype.update = function(msDuration) {
 
     this.setState();
 
-    if (this.isMovingLeft) {
+    if (!this.isMovingRight) {
         this.image = gamejs.transform.flip(this.image, true, false);
-    }
-
-    // Basic directional movement
-    if (this.isRunning) {
-        if (this.speed <= this.maxSpeed) {
-            this.speed += (this.accel * this.maxSpeed);
-        }
-        if (this.speed > this.maxSpeed) {
-            this.speed = this.maxSpeed;
-        }
-        if (this.animation.currentAnimation != 'running') {
-            this.animation.start('running');
-        }
-    } else {
-        this.animation.start('static');
-        if (this.speed >= 0) {
-            this.speed -= (this.decel * this.maxSpeed);
-        }
-        if (this.speed < 0) {
-            this.speed = 0;
-        }
-    }
-    if (this.speed == 0) {
-        this.angle = null;
     }
 
     // Collision detection and jumping
@@ -243,10 +218,6 @@ Unit.prototype.update = function(msDuration) {
         this.dy = terminalVelocity;
     };
 
-    if (!this.isGrounded && this.currentAnimation!='jumping' ) {
-        this.animation.start('jumping');
-    }
-
     this.previousX = this.exact_rect.x;
     this.previousY = this.exact_rect.y;
 
@@ -262,6 +233,90 @@ Unit.prototype.update = function(msDuration) {
 
     this.setCollisionPoints();
 };
+
+var Player = exports.Player = function(pos, spriteSheet, animation, objs) {
+    Player.superConstructor.apply(this, arguments);
+    this.objs = objs;
+};
+objects.extend(Player, Unit);
+
+Player.prototype.update = function(msDuration){
+    Unit.prototype.update.apply(this, arguments);
+
+    objs_colliding = gamejs.sprite.spriteCollide(this, this.objs, false);
+
+    if (objs_colliding.length > 0) {
+        if (this.isGrabbing) {
+            if (this.canDrop) {
+                if (objs_colliding[0].isCarried){
+                    objs_colliding[0].isCarried = false;
+                    if (this.isMovingRight) {
+                        arc_angle = -(Math.PI/4);
+                    } else if (this.isMovingLeft) {
+                        arc_angle = Math.PI + (Math.PI/4);
+                    }
+                    objs_colliding[0].angle = arc_angle;
+                    objs_colliding[0].speed = 250 + this.speed;
+                } else {
+                    objs_colliding[0].isCarried = true;
+                }
+                this.canDrop = false;
+            }
+        } else {
+            this.canDrop = true;
+        }
+    }
+        // Basic directional movement
+    if (this.isRunning) {
+        if (this.speed <= this.maxSpeed) {
+            this.speed += (this.accel * this.maxSpeed);
+        }
+        if (this.speed > this.maxSpeed) {
+            this.speed = this.maxSpeed;
+        }
+        if (this.animation.currentAnimation != 'running') {
+            this.animation.start('running');
+        }
+    } else {
+        this.animation.start('static');
+        if (this.speed >= 0) {
+            this.speed -= (this.decel * this.maxSpeed);
+        }
+        if (this.speed < 0) {
+            this.speed = 0;
+        }
+    }
+    if (this.speed == 0) {
+        this.angle = null;
+    }
+
+    if (!this.isGrounded && this.currentAnimation!='jumping' ) {
+        this.animation.start('jumping');
+    }
+};
+
+var Pickup = exports.Pickup = function(pos, spriteSheet, animation, player) {
+    Pickup.superConstructor.apply(this, arguments);
+    this.player = player;
+    gamejs.log(player);
+    this.isCarried = false;
+}
+objects.extend(Pickup, Unit);
+
+Pickup.prototype.update = function(msDuration){
+    Unit.prototype.update.apply(this, arguments);
+    if (this.isCarried) {
+        this.exact_rect.top = this.player.exact_rect.top;
+        this.exact_rect.left = this.player.exact_rect.left;
+        this.dy = 0;
+    }
+    if (this.speed >= 0) {
+        this.speed -= (this.decel * this.maxSpeed);
+    }
+    if (this.speed < 0) {
+        this.speed = 0;
+    }
+}
 
 var SpriteSheet = exports.SpriteSheet = function(imagePath, sheetSpec) {
    this.get = function(id) {

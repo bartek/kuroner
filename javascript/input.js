@@ -19,6 +19,8 @@ var GameController = exports.GameController = function(player) {
                 this.space = true;
             } else if (event.key === gamejs.event.K_r) {
                 this.r = true;
+            } else if (event.key === gamejs.event.K_SHIFT) {
+                this.shift = true;
             } else {
                 console.debug(event.key);
             }
@@ -33,6 +35,8 @@ var GameController = exports.GameController = function(player) {
                 this.space = false;
             } else if (event.key === gamejs.event.K_r) {
                 this.r = false;
+            } else if (event.key === gamejs.event.K_SHIFT) {
+                this.shift = false;
             } else {
                 console.debug(event.key);
             }
@@ -56,6 +60,13 @@ var GameController = exports.GameController = function(player) {
 
     this.isRunning = function() {
         if (this.left || this.right) {
+            return true;
+        }
+        return false;
+    }
+
+    this.isGrabbing = function() {
+        if (this.shift) {
             return true;
         }
         return false;

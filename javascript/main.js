@@ -1,7 +1,8 @@
 var gamejs = require('gamejs')
     , view = require('./view')
     , input = require('./input')
-    , Unit = require('./actors').Unit
+    , Pickup = require('./actors').Pickup
+    , Player = require('./actors').Player
     , SpriteSheet = require('./actors').SpriteSheet;
 
 var main = function() {
@@ -14,26 +15,27 @@ var main = function() {
     var objs = new gamejs.sprite.Group();
     // Spawn a character, normally our main player, but what if we 
     // want to introduce baddies?!
-    var spawn = function(spriteSheet, isPlayer, pos, animation) {
+    var spawn = function(spriteSheet, pos, animation, objs) {
         
-        var unit = new Unit(
+        var unit = new Player(
             pos,
             spriteSheet,
-            isPlayer, // isPlayer
-            animation
+            animation,
+            objs
         );
         units.add(unit);
         return unit;
     };
-    var objs_spawn = function(spriteSheet, isPlayer, pos, animation) {
+    var objs_spawn = function(spriteSheet, pos, animation, player) {
         
-        var unit = new Unit(
+        var unit = new Pickup(
             pos,
             spriteSheet,
-            isPlayer, // isPlayer
-            animation
+            animation,
+            player
         );
         objs.add(unit);
+        unit.decel = 0.02;
         return unit;
     };
 
@@ -42,16 +44,8 @@ var main = function() {
     var rock_pos = [100,0];
     var rock_sheet = new SpriteSheet(rock_file, rock_dims);
     var rock_anims = {
-        'static': [0],
-        'running': [0],
-        'jumping': [0]
+        'static': [0]
     };
-    var rock = objs_spawn(
-        rock_sheet,
-        false,
-        rock_pos,
-        rock_anims
-    );
     
 //The nitty gritties of our player character
 	var filename = 'images/MegaMan7Sheet4.png';
@@ -66,11 +60,18 @@ var main = function() {
 //Rise!
     var player = spawn(
         player_spriteSheet,
-        true,
         player_pos,
-        player_animation
+        player_animation,
+        objs
     );
     var gameController = new input.GameController(player);
+
+    var rock = objs_spawn(
+        rock_sheet,
+        rock_pos,
+        rock_anims,
+        player
+    );
 
     // The game loop
     var tick = function(msDuration) {
@@ -93,6 +94,7 @@ var main = function() {
             player.angle = gameController.angle();
         }
         player.isRunning = gameController.isRunning();
+        player.isGrabbing = gameController.isGrabbing();
         player.jumped = gameController.jumped();
         player.climb = gameController.climb();
         player.reset = gameController.reset();
