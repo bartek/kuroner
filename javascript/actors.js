@@ -19,6 +19,7 @@ var Unit = function(pos, spriteSheet, animation) {
     this.isMovingLeft = false;
     this.isMovingRight = false;
     this.isGrabbing = false;
+    this.canDrop = false;
 
     // States controlled by the controller.
     this.isRunning;
@@ -65,8 +66,6 @@ Unit.prototype.setState = function() {
     this.isFalling = false;
     this.isGrounded = false;
     this.isAscending = false;
-    this.isMovingLeft = false;
-    this.isMovingRight = false;
 
     /* ---------------------
      * Unit States
@@ -82,8 +81,10 @@ Unit.prototype.setState = function() {
 
     if (this.angle == Math.PI) {
       this.isMovingLeft = true;
+      this.isMovingRight = false;
     } else if (this.angle == 0) {
       this.isMovingRight = true;
+      this.isMovingLeft = false;
     }
 }
 
@@ -101,7 +102,7 @@ Unit.prototype.update = function(msDuration) {
 
     this.setState();
 
-    if (this.isMovingLeft) {
+    if (!this.isMovingRight) {
         this.image = gamejs.transform.flip(this.image, true, false);
     }
 
@@ -178,11 +179,23 @@ Player.prototype.update = function(msDuration){
 
     if (objs_colliding.length > 0) {
         if (this.isGrabbing) {
-            if (objs_colliding[0].isCarried){
-                objs_colliding[0].isCarried = false;
-            } else {
-                objs_colliding[0].isCarried = true;
+            if (this.canDrop) {
+                if (objs_colliding[0].isCarried){
+                    objs_colliding[0].isCarried = false;
+                    if (this.isMovingRight) {
+                        arc_angle = -(Math.PI/4);
+                    } else if (this.isMovingLeft) {
+                        arc_angle = Math.PI + (Math.PI/4);
+                    }
+                    objs_colliding[0].angle = arc_angle;
+                    objs_colliding[0].speed = 250 + this.speed;
+                } else {
+                    objs_colliding[0].isCarried = true;
+                }
+                this.canDrop = false;
             }
+        } else {
+            this.canDrop = true;
         }
     }
         // Basic directional movement
@@ -225,8 +238,15 @@ objects.extend(Pickup, Unit);
 Pickup.prototype.update = function(msDuration){
     Unit.prototype.update.apply(this, arguments);
     if (this.isCarried) {
-        this.rect.top = this.player.rect.top;
-        this.rect.left = this.player.rect.left;
+        this.exact_rect.top = this.player.exact_rect.top;
+        this.exact_rect.left = this.player.exact_rect.left;
+        this.dy = 0;
+    }
+    if (this.speed >= 0) {
+        this.speed -= (this.decel * this.maxSpeed);
+    }
+    if (this.speed < 0) {
+        this.speed = 0;
     }
 }
 

@@ -35,6 +35,7 @@ var main = function() {
             player
         );
         objs.add(unit);
+        unit.decel = 0.02;
         return unit;
     };
 
