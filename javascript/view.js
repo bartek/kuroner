@@ -58,6 +58,32 @@ CollisionMapCollection.prototype.collisionTest = function(sprite) {
     var collisions = gamejs.sprite.spriteCollide(sprite, this.tiles);
     var collidingAt = {};
 
+    /* We can define functions for each collision type. For example, a south
+     * tile would have a function along the lines of:
+     *
+     * var southCheck = function(collision) {
+     *  if ((sprite.isAscending) && (collision.rect.top + collision.rect.height)
+     *  < sprite.collisionPoints.T.y) {
+     *  collidingAt.top = true;
+     *  }
+     *
+     *  Then, given the `collision`, or .. tile, as it actually is, check which
+     *  direction it blocks, so technically, we could skip some checks if
+     *  necessary.
+     * }
+     *
+     * These are excellent reads, perhaps need to do something similar:
+     * http://gamedev.stackexchange.com/questions/25444/collision-detection-player-correction
+     * http://gamedev.stackexchange.com/questions/29371/how-do-i-prevent-my-platformers-character-from-clipping-on-wall-tiles
+     */
+
+    // Check the tiles we are colliding with. If they are tiles stacked on top
+    // of each other, only resolve the the player is nearest to?
+    // We can use a custom collision detecting function. In this function, we
+    // can test the NEXT point of collision for our sprite. This fixes the
+    // entire "stuck" issue in theory. We can get the NEXT location by adjusting
+    // the movement into its own function that returns the change.
+
     collisions.forEach(function(collision) {
       // Tile is below the players hot spot.
       if ((!sprite.isAscending) && (collision.rect.top > sprite.collisionPoints.H.y)) {
@@ -65,10 +91,23 @@ CollisionMapCollection.prototype.collisionTest = function(sprite) {
       // Tile is to the right of the player right side.
       } else if ((sprite.isMovingRight) && (collision.rect.left > sprite.collisionPoints.R.x)) {
         collidingAt.right = true;
-      } else if ((sprite.isMovingLeft) && (collision.rect.left < sprite.collisionPoints.L.x)) {
+      } else if ((sprite.isMovingLeft) && ((collision.rect.left + collision.rect.width) < sprite.collisionPoints.L.x)) {
         collidingAt.left = true;
+        gamejs.log("Left collide");
       }
     });
+
+    /* Since we'll be supporting more than just blocking tiles, perhaps we'll
+     * need to adjust what is returned here. We want to identify the directions
+     * a collision happens but we also want to identify what has been collided
+     * with. So something like
+     *
+     * return {
+     *  blocking: ['bottom', 'left']
+     *  actions: ['death', 'hurt', 'spring', 'etc..'],
+     * }
+     *
+     */
     return Object.keys(collidingAt);
 };
 var CollisionMap = exports.CollisionMap = new CollisionMapCollection();

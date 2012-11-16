@@ -91,6 +91,12 @@ Unit.prototype.setCollisionPoints= function() {
         [5, 5]
       );
       gamejs.draw.rect(this.image, '#ff00cc', lRect);
+
+      var hRect = new gamejs.Rect(
+        [this.collisionPoints.H.x, this.collisionPoints.H.y],
+        [5, 5]
+      );
+      gamejs.draw.rect(this.image, '#ff00cc', hRect);
     }
 };
 
@@ -107,7 +113,6 @@ Unit.prototype.setState = function() {
      * ---------------------
      */
     if (this.exact_rect.y === this.previousY) {
-      this.isGrounded = true;
     } else if (this.exact_rect.y > this.previousY) {
       this.isFalling = true;
     } else if (this.exact_rect.y < this.previousY) {
