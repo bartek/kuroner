@@ -1,7 +1,7 @@
 var gamejs = require('gamejs')
     , config = require('./config').config
     , objects = require('gamejs/utils/objects')
-    , CollisionMap = require('./view').CollisionMap;
+    , TileMap = require('./view').TileMap;
 
 var terminalVelocity = 10;
 
@@ -155,7 +155,7 @@ Unit.prototype.update = function(msDuration) {
     }
 
     // Collision detection and jumping
-    this.colliding = CollisionMap.collisionTest(this);
+    this.colliding = TileMap.collisionTest(this);
 
     // We have the side of the tile the player is colliding with. With this, we
     // can determine if we should stop them on the ground, let them continue

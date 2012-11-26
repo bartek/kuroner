@@ -31,15 +31,21 @@ var BLOCK = {
 };
 
 // Store tiles that can be collided with 
-var CollisionMapCollection = function() {
+var TileMapCollection = function() {
     this.tiles = new gamejs.sprite.Group();
     this.deadlyTiles = new gamejs.sprite.Group();
+
+    // We need to know where to start for this map. The tile should be defined
+    // by a `start:true` property.
+    this.startingPosition = [0, 0];
 };
 
 // Add tiles that can block the player into the blockable tiles group.
-CollisionMapCollection.prototype.pushOrIgnore = function(tile) {
+TileMapCollection.prototype.push = function(tile, tilePos) {
     if (tile.properties) {
-      if (tile.properties.block) {
+      if (tile.properties.start) {
+        this.startingPosition = tilePos;
+      } else if (tile.properties.block) {
         this.tiles.add(tile)
       }
       if (tile.properties.pain) {
@@ -51,7 +57,7 @@ CollisionMapCollection.prototype.pushOrIgnore = function(tile) {
 // Check if the passed sprite is colliding with any of our blocking tiles.
 // Return an object telling us where the collision is happening, so we can
 // propel the sprite in the right direction.
-CollisionMapCollection.prototype.collisionTest = function(sprite) {
+TileMapCollection.prototype.collisionTest = function(sprite) {
     // How about testing for collisions with deadly tiles?
     // TODO: For now, we assume each tile is "always" blocking. So, it blocks from
     // all directions. 
@@ -114,7 +120,7 @@ CollisionMapCollection.prototype.collisionTest = function(sprite) {
       death: isDeath
     }
 };
-var CollisionMap = exports.CollisionMap = new CollisionMapCollection();
+var TileMap = exports.TileMap = new TileMapCollection();
 
 // Loads the Map at `url` and holds all layers.
 var Tile = function(rect, properties) {
@@ -189,15 +195,16 @@ var LayerView = function(map, layer, opts) {
             var tileSurface = opts.tiles.getSurface(gid);
 
             if (tileSurface) {
+                var tilePos = [j * opts.tileWidth, i * opts.tileHeight];
                 var tileRect = new gamejs.Rect(
-                        [j * opts.tileWidth, i * opts.tileHeight],
-                        [opts.tileWidth, opts.tileHeight]
+                  tilePos,
+                  [opts.tileWidth, opts.tileHeight]
                 );
                 this.surface.blit(tileSurface, tileRect);
                 var tile = new Tile(tileRect, tileProperties);
 
                 // Push or ignore the tile. Only kept if its relevant.
-                CollisionMap.pushOrIgnore(tile);
+                TileMap.push(tile, tilePos);
             } else {
                 gamejs.log('No GID ', gid, i, j, 'layer', i);
             }

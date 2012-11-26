@@ -1,5 +1,6 @@
 var gamejs = require('gamejs')
     , view = require('./view')
+    , TileMap = require('./view').TileMap
     , input = require('./input')
     , Pickup = require('./actors').Pickup
     , Player = require('./actors').Player
@@ -48,7 +49,7 @@ var main = function() {
     //The nitty gritties of our player character
     var filename = 'images/MegaMan7Sheet4.png';
     var dimensions = {width:42, height:50};
-    var player_pos = [0, 0];
+    var player_pos = TileMap.startingPosition;
     var player_spriteSheet = new SpriteSheet(filename, dimensions);
     var player_animation = {
         'static': [0],
