@@ -8,15 +8,14 @@ var gamejs = require('gamejs')
 var main = function() {
     gamejs.display.setCaption('Game Off')
     var display = gamejs.display.setMode([800, 600]);
-	
     var map = new view.Map('./data/grassland.tmx');
 
     var units = new gamejs.sprite.Group();
     var objs = new gamejs.sprite.Group();
+
     // Spawn a character, normally our main player, but what if we 
     // want to introduce baddies?!
     var spawn = function(spriteSheet, pos, animation, objs) {
-        
         var unit = new Player(
             pos,
             spriteSheet,
@@ -27,7 +26,6 @@ var main = function() {
         return unit;
     };
     var objs_spawn = function(spriteSheet, pos, animation, player) {
-        
         var unit = new Pickup(
             pos,
             spriteSheet,
@@ -47,24 +45,24 @@ var main = function() {
         'static': [0]
     };
     
-//The nitty gritties of our player character
-	var filename = 'images/MegaMan7Sheet4.png';
-	var dimensions = {width:42, height:50};
+    //The nitty gritties of our player character
+    var filename = 'images/MegaMan7Sheet4.png';
+    var dimensions = {width:42, height:50};
     var player_pos = [0, 0];
-	var player_spriteSheet = new SpriteSheet(filename, dimensions);
+    var player_spriteSheet = new SpriteSheet(filename, dimensions);
     var player_animation = {
         'static': [0],
         'running':[5,14],
         'jumping':[18]
     };
-//Rise!
+
+    // Rise!
     var player = spawn(
         player_spriteSheet,
         player_pos,
         player_animation,
         objs
     );
-    var gameController = new input.GameController(player);
 
     var rock = objs_spawn(
         rock_sheet,
@@ -72,6 +70,8 @@ var main = function() {
         rock_anims,
         player
     );
+
+    var gameController = new input.GameController(player);
 
     // The game loop
     var tick = function(msDuration) {
@@ -87,7 +87,7 @@ var main = function() {
         map.draw(display);
         units.draw(display);
         objs.draw(display);
-		
+
         //Get the input values from the game controller and apply to player
         //undefined angle is bad - only set angle when it's defined
         if (typeof gameController.angle() !== "undefined") {

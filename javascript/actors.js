@@ -102,8 +102,6 @@ Unit.prototype.setCollisionPoints= function() {
 // player in a position that is available (e.g. not a tile that could kill the
 // player.) 
 Unit.prototype.setDeath = function() {
-    this.dy = 0;
-    this.isGrounded = false;
     this.realRect.moveIp(-this.realRect.topleft[0], -this.realRect.topleft[1]);
 }
 
