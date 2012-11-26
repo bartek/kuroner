@@ -29,21 +29,20 @@ var Unit = function(pos, spriteSheet, animation) {
 
     this.maxSpeed = 200;
 
-    // The lower, the higher we jump. Strange?
-    this.jumpHeight = -12;
+    this.jumpHeight = 12;
 
     this.origImage = spriteSheet.get(0);
     this.animation = new Animation(spriteSheet, animation, 12);
     this.animation.start('static');
 
-    // To prevent image blurring from decimal position, object has exact_rect to 
+    // To prevent image blurring from decimal position, object has realRect to 
     // store exact position and rect, which will always be a whole-integer-rounded 
-    // version of exact_rect - only rect is rendered
+    // version of realRect - only rect is rendered
     this.rect = new gamejs.Rect(pos, [spriteSheet.width, spriteSheet.height]);
-    this.exact_rect = new gamejs.Rect(this.rect);
+    this.realRect = new gamejs.Rect(this.rect);
 
-    this.previousX = this.exact_rect.x;
-    this.previousY = this.exact_rect.y;
+    this.previousX = this.realRect.x;
+    this.previousY = this.realRect.y;
 
     // Action state attributes
     this.canJump = false;
@@ -57,23 +56,23 @@ objects.extend(Unit, gamejs.sprite.Sprite);
 
 // Various locations on the sprite that are used for collision detecting.
 Unit.prototype.setCollisionPoints= function() {
-    // These numbers are kind of hacky. The reason the exact_rect width/height
+    // These numbers are kind of hacky. The reason the realRect width/height
     // is larger than the actual sprite is because all frames in the animation
     // must be the same size, and that makes the rect larger than it should be.
     this.collisionPoints = {
      // Hot spot for ground collisions
      H: {
-      x: this.exact_rect.x + ((this.exact_rect.width / 2) - 5),
-      y: this.exact_rect.y + (this.exact_rect.height - 10)
+      x: this.realRect.x + ((this.realRect.width / 2) - 5),
+      y: this.realRect.y + (this.realRect.height - 10)
      },
      // Right top side of the player
      R: {
-      x: this.exact_rect.x + this.exact_rect.width - 10,
-      y: this.exact_rect.y + 15
+      x: this.realRect.x + this.realRect.width - 10,
+      y: this.realRect.y + 15
      },
      L: {
-      x: this.exact_rect.x + 5,
-      y: this.exact_rect.y + 15
+      x: this.realRect.x + 5,
+      y: this.realRect.y + 15
      }
     };
 
@@ -99,6 +98,15 @@ Unit.prototype.setCollisionPoints= function() {
     }
 };
 
+// Player has been killed in some manner. Play death animation and reset the
+// player in a position that is available (e.g. not a tile that could kill the
+// player.) 
+Unit.prototype.setDeath = function() {
+    this.dy = 0;
+    this.isGrounded = false;
+    this.realRect.moveIp(-this.realRect.topleft[0], -this.realRect.topleft[1]);
+}
+
 Unit.prototype.setState = function() {
     // Reset
     this.isFalling = false;
@@ -109,10 +117,10 @@ Unit.prototype.setState = function() {
      * Unit States
      * ---------------------
      */
-    if (this.exact_rect.y === this.previousY) {
-    } else if (this.exact_rect.y > this.previousY) {
+    if (this.realRect.y === this.previousY) {
+    } else if (this.realRect.y > this.previousY) {
       this.isFalling = true;
-    } else if (this.exact_rect.y < this.previousY) {
+    } else if (this.realRect.y < this.previousY) {
       this.isAscending = true;
     }
 
@@ -125,6 +133,13 @@ Unit.prototype.setState = function() {
     }
 }
 
+Unit.prototype.moveUnit = function(msDuration) {
+    var x = Math.cos(this.angle) * this.speed * (msDuration / 1000);
+    var y = Math.sin(this.angle) * this.speed * (msDuration / 1000) + this.dy;
+    this.realRect.moveIp(x, y);
+    return [x, y];
+}
+
 Unit.prototype.update = function(msDuration) {
     // Sprite animation
     this.animation.update(msDuration);
@@ -132,9 +147,7 @@ Unit.prototype.update = function(msDuration) {
 
     // DEBUG: Character reset
     if (this.reset) {
-        this.dy = 0;
-        this.isGrounded = false;
-        this.rect.moveIp(-this.rect.topleft[0], -this.rect.topleft[1]);
+      this.setDeath();
     }
 
     this.setState();
@@ -152,10 +165,10 @@ Unit.prototype.update = function(msDuration) {
     // We need to check if the object is colliding, but also from which side,
     // otherwise it gets really wonky trying to determine how we want to handle
     // dy, etc.
-    if (this.colliding.length > 0) {
-      var colBottom = this.colliding.indexOf("bottom") > -1;
-      var colRight = this.colliding.indexOf("right") > -1;
-      var colLeft = this.colliding.indexOf("left") > -1;
+    if (this.colliding.blocking.length > 0) {
+      var colBottom = this.colliding.blocking.indexOf("bottom") > -1;
+      var colRight = this.colliding.blocking.indexOf("right") > -1;
+      var colLeft = this.colliding.blocking.indexOf("left") > -1;
 
       var actBottom = function(that) {
         that.isGrounded = true;
@@ -164,10 +177,12 @@ Unit.prototype.update = function(msDuration) {
 
       var actRight = function(that) {
         that.speed = 0;
+        that.realRect.moveIp(-1, 0);
       }
 
       var actLeft = function(that) {
         that.speed = 0;
+        that.realRect.moveIp(1, 0);
       }
 
       // TODO: Note. Perhaps use the BLOCKS idea to determine which directions
@@ -198,7 +213,7 @@ Unit.prototype.update = function(msDuration) {
     if (this.isGrounded) {
       if (this.jumped) {
         if (this.canJump) {
-          this.dy = this.jumpHeight;
+          this.dy = -this.jumpHeight;
           this.canJump = false;
         };
       } else {
@@ -218,18 +233,15 @@ Unit.prototype.update = function(msDuration) {
         this.dy = terminalVelocity;
     };
 
-    this.previousX = this.exact_rect.x;
-    this.previousY = this.exact_rect.y;
+    this.previousX = this.realRect.x;
+    this.previousY = this.realRect.y;
 
-    this.exact_rect.moveIp(
-        Math.cos(this.angle) * this.speed * (msDuration / 1000),
-        Math.sin(this.angle) * this.speed * (msDuration / 1000) + this.dy
-    );
+    this.moveUnit(msDuration);
 
     // Set the position of the rendered rectangle to a rounded version of the 
     // exact rect
-    this.rect.top = Math.round(this.exact_rect.top);
-    this.rect.left = Math.round(this.exact_rect.left);
+    this.rect.top = Math.round(this.realRect.top);
+    this.rect.left = Math.round(this.realRect.left);
 
     this.setCollisionPoints();
 };
@@ -306,8 +318,8 @@ objects.extend(Pickup, Unit);
 Pickup.prototype.update = function(msDuration){
     Unit.prototype.update.apply(this, arguments);
     if (this.isCarried) {
-        this.exact_rect.top = this.player.exact_rect.top;
-        this.exact_rect.left = this.player.exact_rect.left;
+        this.realRect.top = this.player.realRect.top;
+        this.realRect.left = this.player.realRect.left;
         this.dy = 0;
     }
     if (this.speed >= 0) {

@@ -57,6 +57,7 @@ CollisionMapCollection.prototype.collisionTest = function(sprite) {
     // all directions. 
     var collisions = gamejs.sprite.spriteCollide(sprite, this.tiles);
     var collidingAt = {};
+    var isDeath = false;
 
     /* We can define functions for each collision type. For example, a south
      * tile would have a function along the lines of:
@@ -96,7 +97,7 @@ CollisionMapCollection.prototype.collisionTest = function(sprite) {
         gamejs.log("Left collide");
       }
     });
-
+    
     /* Since we'll be supporting more than just blocking tiles, perhaps we'll
      * need to adjust what is returned here. We want to identify the directions
      * a collision happens but we also want to identify what has been collided
@@ -108,7 +109,10 @@ CollisionMapCollection.prototype.collisionTest = function(sprite) {
      * }
      *
      */
-    return Object.keys(collidingAt);
+    return {
+      blocking: Object.keys(collidingAt),
+      death: isDeath
+    }
 };
 var CollisionMap = exports.CollisionMap = new CollisionMapCollection();
 
