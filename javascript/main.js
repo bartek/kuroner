@@ -9,6 +9,8 @@ var gamejs = require('gamejs')
 var main = function() {
     gamejs.display.setCaption('Game Off')
     var display = gamejs.display.setMode([800, 600]);
+    var background = gamejs.image.load('images/background1.jpg')
+
     var map = new view.Map('./data/grassland.tmx');
 
     var units = new gamejs.sprite.Group();
@@ -85,9 +87,12 @@ var main = function() {
 
         // Draw
         display.clear();
+        display.blit(background);
+
         map.draw(display);
         units.draw(display);
         objs.draw(display);
+
 
         //Get the input values from the game controller and apply to player
         //undefined angle is bad - only set angle when it's defined
@@ -110,6 +115,7 @@ var IMAGES = [
     'images/meatboy.png',
     'images/MegaMan7Sheet4.png',
     'images/rock.png',
+    'images/background1.jpg',
 ];
 
 
