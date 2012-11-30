@@ -31,7 +31,7 @@ var BLOCK = {
 };
 
 // Store tiles that can be collided with 
-var TileMapCollection = function() {
+var TileMapModel = function() {
     this.tiles = new gamejs.sprite.Group();
     this.deadlyTiles = new gamejs.sprite.Group();
 
@@ -40,13 +40,33 @@ var TileMapCollection = function() {
     this.startingPosition = [0, 0];
 };
 
+TileMapModel.prototype.createMatrix = function(opts) {
+    this.matrix = [];
+    this.tileWidth = opts.width;
+    this.tileHeight = opts.height;
+
+    var i = opts.height;
+    while (i-->0) {
+        var j = opts.width;
+        this.matrix[i] = [];
+        while (j-->0) {
+            this.matrix[i][j] = BLOCK.none;
+        }
+    }
+};
+
 // Add tiles that can block the player into the blockable tiles group.
-TileMapCollection.prototype.push = function(tile, tilePos) {
+TileMapModel.prototype.push = function(tile, tilePos, i, j) {
+
     if (tile.properties) {
       if (tile.properties.start) {
         this.startingPosition = tilePos;
       } else if (tile.properties.block) {
         this.tiles.add(tile)
+
+        // Add tile to the matrix. For simplicity sake at this point, simply add it
+        // as a BLOCK.always tile if there is a blocking property on it.
+        this.matrix[i][j] = BLOCK.always;
       }
       if (tile.properties.pain) {
         this.deadlyTiles.add(tile);
@@ -57,7 +77,7 @@ TileMapCollection.prototype.push = function(tile, tilePos) {
 // Check if the passed sprite is colliding with any of our blocking tiles.
 // Return an object telling us where the collision is happening, so we can
 // propel the sprite in the right direction.
-TileMapCollection.prototype.collisionTest = function(sprite) {
+TileMapModel.prototype.collisionTest = function(sprite) {
     // How about testing for collisions with deadly tiles?
     // TODO: For now, we assume each tile is "always" blocking. So, it blocks from
     // all directions. 
@@ -120,7 +140,6 @@ TileMapCollection.prototype.collisionTest = function(sprite) {
       death: isDeath
     }
 };
-var TileMap = exports.TileMap = new TileMapCollection();
 
 // Loads the Map at `url` and holds all layers.
 var Tile = function(rect, properties) {
@@ -132,6 +151,8 @@ var Tile = function(rect, properties) {
     return this;
 };
 objects.extend(Tile, gamejs.sprite.Sprite);
+
+var TileMap = exports.TileMap = new TileMapModel();
 
 var Map = exports.Map = function(url) {
     // Draw each layer
@@ -155,6 +176,11 @@ var Map = exports.Map = function(url) {
     var self = this;
     var map = new tmx.Map(url);
     var mapController = new MapController();
+
+    TileMap.createMatrix({
+        width: map.tileWidth, 
+        height: map.tileHeight
+    });
 
     // Given the TMX Map we've loaded, go through each layer (via map.layers,
     // provided by gamejs), and return a LayerView that we can deal with.
@@ -204,7 +230,7 @@ var LayerView = function(map, layer, opts) {
                 var tile = new Tile(tileRect, tileProperties);
 
                 // Push or ignore the tile. Only kept if its relevant.
-                TileMap.push(tile, tilePos);
+                TileMap.push(tile, tilePos, i, j);
             } else {
                 gamejs.log('No GID ', gid, i, j, 'layer', i);
             }

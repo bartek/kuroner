@@ -264,7 +264,11 @@ Player.prototype.updatePainStage = function() {
 // player in a position that is available (e.g. not a tile that could kill the
 // player.) 
 Unit.prototype.setDeath = function() {
-    this.realRect.moveIp(-this.realRect.topleft[0], -this.realRect.topleft[1]);
+    [x, y] = TileMap.startingPosition;
+
+    this.realRect.x = x;
+    this.realRect.y = y;
+
     this.updatePainStage();
 }
 
