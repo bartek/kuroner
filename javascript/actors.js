@@ -1,7 +1,8 @@
 var gamejs = require('gamejs')
     , config = require('./config').config
     , objects = require('gamejs/utils/objects')
-    , TileMap = require('./view').TileMap;
+    , TileMap = require('./view').TileMap
+    , Animation = require('./animate').Animation;
 
 var terminalVelocity = 10;
 
@@ -28,7 +29,6 @@ var Unit = function(pos, spriteSheet, animation) {
     this.angle = null;
 
     this.maxSpeed = 200;
-
     this.jumpHeight = 12;
 
     this.origImage = spriteSheet.get(0);
@@ -55,7 +55,7 @@ var Unit = function(pos, spriteSheet, animation) {
 objects.extend(Unit, gamejs.sprite.Sprite);
 
 // Various locations on the sprite that are used for collision detecting.
-Unit.prototype.setCollisionPoints= function() {
+Unit.prototype.setCollisionPoints = function() {
     // These numbers are kind of hacky. The reason the realRect width/height
     // is larger than the actual sprite is because all frames in the animation
     // must be the same size, and that makes the rect larger than it should be.
@@ -98,13 +98,6 @@ Unit.prototype.setCollisionPoints= function() {
     }
 };
 
-// Player has been killed in some manner. Play death animation and reset the
-// player in a position that is available (e.g. not a tile that could kill the
-// player.) 
-Unit.prototype.setDeath = function() {
-    this.realRect.moveIp(-this.realRect.topleft[0], -this.realRect.topleft[1]);
-}
-
 Unit.prototype.setState = function() {
     // Reset
     this.isFalling = false;
@@ -143,11 +136,6 @@ Unit.prototype.update = function(msDuration) {
     this.animation.update(msDuration);
     this.image = this.animation.image;
 
-    // DEBUG: Character reset
-    if (this.reset) {
-      this.setDeath();
-    }
-
     this.setState();
 
     if (!this.isMovingRight) {
@@ -167,6 +155,7 @@ Unit.prototype.update = function(msDuration) {
       var colBottom = this.colliding.blocking.indexOf("bottom") > -1;
       var colRight = this.colliding.blocking.indexOf("right") > -1;
       var colLeft = this.colliding.blocking.indexOf("left") > -1;
+      var tolTop = this.colliding.blocking.indexOf("top") > -1;
 
       var actBottom = function(that) {
         that.isGrounded = true;
@@ -246,16 +235,50 @@ Unit.prototype.update = function(msDuration) {
 
 var Player = exports.Player = function(pos, spriteSheet, animation, objs) {
     Player.superConstructor.apply(this, arguments);
+
+    // Player attributes. These are modified by the players pain stage
+    this.painStage = 0;
+    this.canLift = true;
+
     this.objs = objs;
 };
 objects.extend(Player, Unit);
 
-Player.prototype.update = function(msDuration){
+Player.prototype.updatePainStage = function() {
+  this.painStage += 1;
+
+  gamejs.log("Pain Stage", this.painStage);
+
+  if (this.painStage === 1) {
+    this.maxSpeed = 150;
+    this.canLift = true;
+    this.jumpHeight = 10;
+  } else if (this.painStage === 2) {
+    this.maxSpeed = 100;
+    this.canLift = false;
+    this.jumpHeight = 8;
+  }
+};
+
+// Player has been killed in some manner. Play death animation and reset the
+// player in a position that is available (e.g. not a tile that could kill the
+// player.) 
+Unit.prototype.setDeath = function() {
+    this.realRect.moveIp(-this.realRect.topleft[0], -this.realRect.topleft[1]);
+    this.updatePainStage();
+}
+
+Player.prototype.update = function(msDuration) {
     Unit.prototype.update.apply(this, arguments);
+
+    // DEBUG: Character reset
+    if (this.reset) {
+      this.setDeath();
+    }
 
     objs_colliding = gamejs.sprite.spriteCollide(this, this.objs, false);
 
-    if (objs_colliding.length > 0) {
+    if (this.canLift && objs_colliding.length > 0) {
         if (this.isGrabbing) {
             if (this.canDrop) {
                 if (objs_colliding[0].isCarried){
@@ -348,55 +371,4 @@ var SpriteSheet = exports.SpriteSheet = function(imagePath, sheetSpec) {
       }
    }
    return this;
-};
-
-var Animation = function(spriteSheet, animationSpec, fps) {
-	this.fps = fps || 6;
-	this.frameDuration = 1000 / this.fps;
-	this.spec = animationSpec;
-	
-	this.currentFrame = null;
-	this.currentFrameDuration = 0;
-	this.currentAnimation = null;
-	
-	this.spriteSheet = spriteSheet;
-	
-	this.loopFinished = false;
-	
-	this.image = spriteSheet.get(0);
-	return this;
-};
-
-Animation.prototype.start = function(animation) {
-	this.currentAnimation = animation;
-	this.currentFrame = this.spec[animation][0];
-	this.currentFrameDuration = 0;
-	this.update(0);
-	return;
-};
-
-Animation.prototype.update = function(msDuration) {
-	if (!this.currentAnimation) {
-		throw new Error('No animation started.');
-	}
-	
-	this.currentFrameDuration += msDuration;
-	if (this.currentFrameDuration >= this.frameDuration){
-		this.currentFrame++;
-		this.currentFrameDuration = 0;
-	
-		var aniSpec = this.spec[this.currentAnimation];
-		if (aniSpec.length == 1 || this.currentFrame > aniSpec[1]) {
-			this.loopFinished = true;
-			
-			if (aniSpec.length === 3 && aniSpec[2] === false) {
-				this.currentFrame--;
-			} else {
-				this.currentFrame = aniSpec[0];
-			}
-		}
-	}
-	
-	this.image = this.spriteSheet.get(this.currentFrame);
-	return;
 };
