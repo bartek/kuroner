@@ -35,6 +35,9 @@ var TileMapModel = function() {
     this.tiles = new gamejs.sprite.Group();
     this.deadlyTiles = new gamejs.sprite.Group();
 
+    // Tiles with active actions on them (lasers, doors, etc.)
+    this.activeTiles = new gamejs.sprite.Group();
+
     // We need to know where to start for this map. The tile should be defined
     // by a `start:true` property.
     this.startingPosition = [0, 0];
@@ -61,6 +64,8 @@ TileMapModel.prototype.push = function(tile, tilePos, i, j) {
     if (tile.properties) {
       if (tile.properties.start) {
         this.startingPosition = tilePos;
+      } else if (tile.properties.active) {
+        this.activeTiles.add(tile);
       } else if (tile.properties.block) {
         this.tiles.add(tile)
 
@@ -147,6 +152,8 @@ var Tile = function(rect, properties) {
 
     this.rect = rect;
     this.properties = properties;
+
+    gamejs.log("Tile", properties);
 
     return this;
 };

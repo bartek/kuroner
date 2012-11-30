@@ -4,6 +4,7 @@ var gamejs = require('gamejs')
     , input = require('./input')
     , Pickup = require('./actors').Pickup
     , Player = require('./actors').Player
+    , EnemyManager = require('./enemy').EnemyManager
     , SpriteSheet = require('./actors').SpriteSheet;
 
 var main = function() {
@@ -74,6 +75,9 @@ var main = function() {
         player
     );
 
+    // Lasers and stuff.
+    var enemies = new EnemyManager(player);
+
     var gameController = new input.GameController(player);
 
     // The game loop
@@ -84,6 +88,10 @@ var main = function() {
         map.update(msDuration);
         units.update(msDuration);
         objs.update(msDuration);
+        enemies.update(msDuration);
+
+        // Collisions
+        enemies.collide();
 
         // Draw
         display.clear();
@@ -92,7 +100,7 @@ var main = function() {
         map.draw(display);
         units.draw(display);
         objs.draw(display);
-
+        enemies.draw(display);
 
         //Get the input values from the game controller and apply to player
         //undefined angle is bad - only set angle when it's defined
