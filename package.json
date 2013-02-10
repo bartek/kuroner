@@ -1,8 +1,11 @@
 {
-    "name": "g-gameoff",
-    "description": "G-Team Github Gameoff Entry",
+    "name": "kuroner",
+    "description": "A Javascript platformer built with gamejs",
     "version": "0.0.1",
     "private": true,
+    "scripts": {
+        "start": "node server.js"
+    },
     "dependencies": {
         "express": "3.0.1",
         "mu2": "0.5.x"
