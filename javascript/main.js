@@ -1,5 +1,6 @@
 var gamejs = require('gamejs')
     , box2d = require('./contrib/Box2dWeb-2.1.a.3')
+    , globals = require('./globals')
     , view = require('./view')
     , TileMap = require('./view').TileMap
     , input = require('./input')
@@ -44,6 +45,14 @@ var main = function() {
         // PreSolve
     };
     b2World.SetContactListener(b2Listener);
+
+    var debugDraw = new box2d.b2DebugDraw();
+    debugDraw.SetSprite(document.getElementById("gjs-canvas").getContext("2d"));
+    debugDraw.SetDrawScale(globals.BOX2D_SCALE);
+    debugDraw.SetFillAlpha(0.3);
+    debugDraw.SetLineThickness(1.0);
+    debugDraw.SetFlags(box2d.b2DebugDraw.e_shapeBit | box2d.b2DebugDraw.e_jointBit);
+    b2World.SetDebugDraw(debugDraw);
 
     gBackground = gamejs.image.load('images/background1.jpg')
 
@@ -134,6 +143,8 @@ var tick = function(msDuration) {
 
     gMap.draw(gDisplay);
     gUnits.draw(gDisplay);
+
+    b2World.DrawDebugData();
 
     if (typeof gameController.angle() !== "undefined") {
         gPlayer.angle = gameController.angle();
