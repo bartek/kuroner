@@ -1,12 +1,14 @@
 var gamejs = require('gamejs')
-    , config = require('./config').config
+    , box2d = require('./contrib/Box2dWeb-2.1.a.3')
     , objects = require('gamejs/utils/objects')
     , TileMap = require('./view').TileMap
-    , Animation = require('./animate').Animation;
+    , Animation = require('./animate').Animation
+    , globals = require('./globals')
+    , config = require('./config').config;
 
 var terminalVelocity = 10;
 
-var Unit = function(pos, spriteSheet, animation) {
+var Unit = function(pos, spriteSheet, animation, objs, b2World) {
     Unit.superConstructor.apply(this, arguments);
 
     // Accel & Decel are a fraction of max speed added per tick - between 0 and 1
@@ -43,6 +45,29 @@ var Unit = function(pos, spriteSheet, animation) {
 
     this.previousX = this.realRect.x;
     this.previousY = this.realRect.y;
+
+    // Setup box2d.
+    var fixDef = new box2d.b2FixtureDef;
+    fixDef.density = 1.0;
+    fixDef.friction = 0.5;
+    fixDef.restitution = 0.2;
+
+    var bodyDef = new box2d.b2BodyDef;
+    bodyDef.type = box2d.b2Body.b2_dynamicBody;
+    bodyDef.position.x = this.rect.center[0] / globals.BOX2D_SCALE;
+    bodyDef.position.y = this.rect.center[1] / globals.BOX2D_SCALE;
+    fixDef.shape = new box2d.b2PolygonShape;
+
+    var b2Padding = 4;
+    fixDef.shape.SetAsBox(
+            (this.rect.width - b2Padding) * 0.5 / globals.BOX2D_SCALE,
+            (this.rect.height - b2Padding) * 0.5 / globals.BOX2D_SCALE
+    );
+
+    this.b2Body = b2World.CreateBody(bodyDef);
+    this.b2Body.CreateFixture(fixDef);
+    this.b2Body.SetUserData(this);
+    this.kind = 'player';
 
     // Action state attributes
     this.canJump = false;
@@ -142,7 +167,13 @@ Unit.prototype.update = function(msDuration) {
         this.image = gamejs.transform.flip(this.image, true, false);
     }
 
+    //gamejs.log("Updating", this.b2Body.GetPosition());
+    // Box2d updates.
+    this.rect.x = (this.b2Body.GetPosition().x * globals.BOX2D_SCALE) - this.image.getSize()[0] * 0.5;
+    this.rect.y = (this.b2Body.GetPosition().y * globals.BOX2D_SCALE) - this.image.getSize()[1] * 0.5;
+
     // Collision detection and jumping
+    /*
     this.colliding = TileMap.collisionTest(this);
 
     // We have the side of the tile the player is colliding with. With this, we
@@ -231,9 +262,10 @@ Unit.prototype.update = function(msDuration) {
     this.rect.left = Math.round(this.realRect.left);
 
     this.setCollisionPoints();
+    */
 };
 
-var Player = exports.Player = function(pos, spriteSheet, animation, objs) {
+var Player = exports.Player = function(pos, spriteSheet, animation, objs, b2World) {
     Player.superConstructor.apply(this, arguments);
 
     // Player attributes. These are modified by the players pain stage

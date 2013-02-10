@@ -1,4 +1,5 @@
 var gamejs = require('gamejs')
+    , box2d = require('./contrib/Box2dWeb-2.1.a.3')
     , view = require('./view')
     , TileMap = require('./view').TileMap
     , input = require('./input')
@@ -7,14 +8,47 @@ var gamejs = require('gamejs')
     , EnemyManager = require('./enemy').EnemyManager
     , SpriteSheet = require('./actors').SpriteSheet;
 
+var b2World = null;
+var b2Draw = null;
+var b2Listener = null;
+
+// objects and units
+var gUnits = null;
+
+var gDisplay = null;
+var gMap = null;
+var gameController = null;
+var gBackground = null;
+
 var main = function() {
-    gamejs.display.setCaption('Game Off')
-    var display = gamejs.display.setMode([800, 600]);
-    var background = gamejs.image.load('images/background1.jpg')
+    gDisplay = gamejs.display.setMode([800, 600]);
 
-    var map = new view.Map('./data/grassland.tmx');
+    // Box2d.
+    b2World = new box2d.b2World(
+            new box2d.b2Vec2(0, 10), // gravity
+            true // allow sleep
+    );
 
-    var units = new gamejs.sprite.Group();
+    var b2Listener = box2d.Box2D.Dynamics.b2ContactListener;
+    b2Listener.BeginContact = function(contact) {
+        //gamejs.log("BeginContact", contact.GetFixtureA().GetBody().GetUserData());
+    };
+    b2Listener.EndContact = function(contact) {
+        //gamejs.log("EndContact", contact.GetFixtureA().GetBody().GetUserData());
+    };
+    b2Listener.PostSolve = function(contact, impulse) {
+        //gamejs.log("PostSolve", contact, impulse);
+    };
+    b2Listener.PreSolve = function(contact, oldManifold) {
+        // PreSolve
+    };
+    b2World.SetContactListener(b2Listener);
+
+    gBackground = gamejs.image.load('images/background1.jpg')
+
+    gMap = new view.Map('./data/cave.tmx', b2World);
+
+    gUnits = new gamejs.sprite.Group();
     var objs = new gamejs.sprite.Group();
 
     // Spawn a character, normally our main player, but what if we 
@@ -24,9 +58,10 @@ var main = function() {
             pos,
             spriteSheet,
             animation,
-            objs
+            objs,
+            b2World
         );
-        units.add(unit);
+        gUnits.add(unit);
         return unit;
     };
     var objs_spawn = function(spriteSheet, pos, animation, player) {
@@ -68,58 +103,72 @@ var main = function() {
         objs
     );
 
-    var rock = objs_spawn(
-        rock_sheet,
-        rock_pos,
-        rock_anims,
-        player
-    );
-
     // Lasers and stuff.
     var enemies = new EnemyManager(player);
+    gameController = new input.GameController(player);
 
-    var gameController = new input.GameController(player);
+    gamejs.time.fpsCallback(tick, this, 24);
+};
 
-    // The game loop
-    var tick = function(msDuration) {
-        gamejs.event.get().forEach(function(event) {
-            gameController.handle(event);
-        });
-        map.update(msDuration);
-        units.update(msDuration);
-        objs.update(msDuration);
-        enemies.update(msDuration);
+// The game loop
+var tick = function(msDuration) {
+    gamejs.event.get().forEach(function(event) {
+        gameController.handle(event);
+    });
 
-        // Collisions
-        enemies.collide();
+    // Update physics.
+    b2World.Step(
+        1 / 24, // frame rate
+        10, // velocity iterations
+        10 // position iterations.
+    );
+    b2World.ClearForces();
 
-        // Draw
-        display.clear();
-        display.blit(background);
+    gMap.update(msDuration);
+    gUnits.update(msDuration);
 
-        map.draw(display);
-        units.draw(display);
-        objs.draw(display);
-        enemies.draw(display);
+    // Draw!
+    gDisplay.clear();
+    gDisplay.blit(gBackground);
 
-        //Get the input values from the game controller and apply to player
-        //undefined angle is bad - only set angle when it's defined
-        if (typeof gameController.angle() !== "undefined") {
-            player.angle = gameController.angle();
-        }
-        player.isRunning = gameController.isRunning();
-        player.isGrabbing = gameController.isGrabbing();
-        player.jumped = gameController.jumped();
-        player.climb = gameController.climb();
-        player.reset = gameController.reset();
+    gMap.draw(gDisplay);
+    gUnits.draw(gDisplay);
 
-    };
-    gamejs.time.fpsCallback(tick, this, 60);
+    /*
+    map.update(msDuration);
+    units.update(msDuration);
+    objs.update(msDuration);
+    enemies.update(msDuration);
+
+    // Collisions
+    enemies.collide();
+
+    // Draw
+    display.clear();
+    display.blit(background);
+
+    map.draw(display);
+    units.draw(display);
+    objs.draw(display);
+    enemies.draw(display);
+
+    //Get the input values from the game controller and apply to player
+    //undefined angle is bad - only set angle when it's defined
+    if (typeof gameController.angle() !== "undefined") {
+        player.angle = gameController.angle();
+    }
+    player.isRunning = gameController.isRunning();
+    player.isGrabbing = gameController.isGrabbing();
+    player.jumped = gameController.jumped();
+    player.climb = gameController.climb();
+    player.reset = gameController.reset();
+    */
 };
 
 var IMAGES = [
     // World
     './data/grasstilesheet.png',
+    './data/set-cave_bright.png',
     'images/meatboy.png',
     'images/MegaMan7Sheet4.png',
     'images/rock.png',

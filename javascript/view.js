@@ -1,7 +1,8 @@
 var gamejs = require('gamejs')
+    , objects = require('gamejs/utils/objects')
     , tmx = require('gamejs/tmx')
-    , objects = require('gamejs/utils/objects');
-
+    , box2d = require('./contrib/Box2dWeb-2.1.a.3')
+    , globals = require('./globals');
 
 /*
 * Each tile can hold a "block" property detailing its desired
@@ -40,7 +41,7 @@ var TileMapModel = function() {
 
     // We need to know where to start for this map. The tile should be defined
     // by a `start:true` property.
-    this.startingPosition = [0, 0];
+    this.startingPosition = [100, 0];
 };
 
 TileMapModel.prototype.createMatrix = function(opts) {
@@ -147,13 +148,42 @@ TileMapModel.prototype.collisionTest = function(sprite) {
 };
 
 // Loads the Map at `url` and holds all layers.
-var Tile = function(rect, properties) {
+var Tile = function(rect, properties, b2World) {
     Tile.superConstructor.apply(this, arguments);
+
+    var tilePadding = 1;
 
     this.rect = rect;
     this.properties = properties;
+    gamejs.log("Tile", properties, this.rect.center[0]);
 
-    gamejs.log("Tile", properties);
+    if (properties.block === 'always') {
+        // Define fixture to set on the body eventually.
+        var fixDef = new box2d.b2FixtureDef;
+        fixDef.density = 1.0;
+        fixDef.friction = 0.5;
+        fixDef.restitution = 0.2;
+
+        // Create a body, setting the initial postion, type.
+        var bodyDef = new box2d.b2BodyDef;
+        bodyDef.type = box2d.b2Body.b2_staticBody;
+        bodyDef.position.x = this.rect.center[0] / globals.BOX2D_SCALE;
+        bodyDef.position.y = this.rect.center[1] / globals.BOX2D_SCALE;
+        fixDef.shape = new box2d.b2PolygonShape;
+
+        // Create a box around this polygon, with the box centered on the origin
+        // of the tile.
+        fixDef.shape.SetAsBox(
+                (this.rect.width - tilePadding) * 0.5 / globals.BOX2D_SCALE,
+                (this.rect.height - tilePadding) * 0.5 / globals.BOX2D_SCALE
+        );
+
+        this.b2Body = b2World.CreateBody(bodyDef);
+        this.b2Body.CreateFixture(fixDef);
+
+        this.b2Body.SetUserData(this);
+    }
+    this.kind = 'tile';
 
     return this;
 };
@@ -161,7 +191,9 @@ objects.extend(Tile, gamejs.sprite.Sprite);
 
 var TileMap = exports.TileMap = new TileMapModel();
 
-var Map = exports.Map = function(url) {
+var Map = exports.Map = function(url, b2World) {
+    this.b2World = b2World;
+
     // Draw each layer
     this.draw = function(display) {
         layerViews.forEach(function(layerView) {
@@ -234,7 +266,7 @@ var LayerView = function(map, layer, opts) {
                   [opts.tileWidth, opts.tileHeight]
                 );
                 this.surface.blit(tileSurface, tileRect);
-                var tile = new Tile(tileRect, tileProperties);
+                var tile = new Tile(tileRect, tileProperties, map.b2World);
 
                 // Push or ignore the tile. Only kept if its relevant.
                 TileMap.push(tile, tilePos, i, j);
