@@ -13,6 +13,7 @@ var b2Draw = null;
 var b2Listener = null;
 
 // objects and units
+var gPlayer = null;
 var gUnits = null;
 
 var gDisplay = null;
@@ -25,7 +26,7 @@ var main = function() {
 
     // Box2d.
     b2World = new box2d.b2World(
-            new box2d.b2Vec2(0, 10), // gravity
+            new box2d.b2Vec2(0, 20), // gravity
             true // allow sleep
     );
 
@@ -96,7 +97,7 @@ var main = function() {
     };
 
     // Rise!
-    var player = spawn(
+    gPlayer = spawn(
         player_spriteSheet,
         player_pos,
         player_animation,
@@ -104,8 +105,8 @@ var main = function() {
     );
 
     // Lasers and stuff.
-    var enemies = new EnemyManager(player);
-    gameController = new input.GameController(player);
+    var enemies = new EnemyManager(gPlayer);
+    gameController = new input.GameController(gPlayer);
 
     gamejs.time.fpsCallback(tick, this, 24);
 };
@@ -134,6 +135,12 @@ var tick = function(msDuration) {
     gMap.draw(gDisplay);
     gUnits.draw(gDisplay);
 
+    if (typeof gameController.angle() !== "undefined") {
+        gPlayer.angle = gameController.angle();
+    }
+    gPlayer.isRunning = gameController.isRunning();
+    gPlayer.jumped = gameController.jumped();
+
     /*
     map.update(msDuration);
     units.update(msDuration);
@@ -157,6 +164,7 @@ var tick = function(msDuration) {
     if (typeof gameController.angle() !== "undefined") {
         player.angle = gameController.angle();
     }
+
     player.isRunning = gameController.isRunning();
     player.isGrabbing = gameController.isGrabbing();
     player.jumped = gameController.jumped();

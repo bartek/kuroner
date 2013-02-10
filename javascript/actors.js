@@ -25,6 +25,9 @@ var Unit = function(pos, spriteSheet, animation, objs, b2World) {
     this.isGrabbing = false;
     this.canDrop = false;
 
+    this.countJump = 0;
+    this.endJump = true;
+
     // States controlled by the controller.
     this.isRunning;
     this.jumped;
@@ -54,20 +57,21 @@ var Unit = function(pos, spriteSheet, animation, objs, b2World) {
 
     var bodyDef = new box2d.b2BodyDef;
     bodyDef.type = box2d.b2Body.b2_dynamicBody;
-    bodyDef.position.x = this.rect.center[0] / globals.BOX2D_SCALE;
-    bodyDef.position.y = this.rect.center[1] / globals.BOX2D_SCALE;
+    bodyDef.position.x = this.realRect.center[0] / globals.BOX2D_SCALE;
+    bodyDef.position.y = this.realRect.center[1] / globals.BOX2D_SCALE;
     fixDef.shape = new box2d.b2PolygonShape;
 
     var b2Padding = 4;
     fixDef.shape.SetAsBox(
-            (this.rect.width - b2Padding) * 0.5 / globals.BOX2D_SCALE,
-            (this.rect.height - b2Padding) * 0.5 / globals.BOX2D_SCALE
+            (this.realRect.width - b2Padding) * 0.5 / globals.BOX2D_SCALE,
+            (this.realRect.height - b2Padding) * 0.5 / globals.BOX2D_SCALE
     );
 
     this.b2Body = b2World.CreateBody(bodyDef);
     this.b2Body.CreateFixture(fixDef);
     this.b2Body.SetUserData(this);
     this.kind = 'player';
+    this.vel = this.b2Body.GetLinearVelocity();
 
     // Action state attributes
     this.canJump = false;
@@ -150,6 +154,7 @@ Unit.prototype.setState = function() {
 }
 
 Unit.prototype.moveUnit = function(msDuration) {
+    gamejs.log("moveUnit", this.angle, this.speed);
     var x = Math.cos(this.angle) * this.speed * (msDuration / 1000);
     var y = Math.sin(this.angle) * this.speed * (msDuration / 1000) + this.dy;
     this.realRect.moveIp(x, y);
@@ -157,6 +162,8 @@ Unit.prototype.moveUnit = function(msDuration) {
 }
 
 Unit.prototype.update = function(msDuration) {
+    //gamejs.log("Vel", this.vel);
+
     // Sprite animation
     this.animation.update(msDuration);
     this.image = this.animation.image;
@@ -167,10 +174,31 @@ Unit.prototype.update = function(msDuration) {
         this.image = gamejs.transform.flip(this.image, true, false);
     }
 
-    //gamejs.log("Updating", this.b2Body.GetPosition());
     // Box2d updates.
-    this.rect.x = (this.b2Body.GetPosition().x * globals.BOX2D_SCALE) - this.image.getSize()[0] * 0.5;
-    this.rect.y = (this.b2Body.GetPosition().y * globals.BOX2D_SCALE) - this.image.getSize()[1] * 0.5;
+    this.realRect.x = (this.b2Body.GetPosition().x * globals.BOX2D_SCALE) - this.image.getSize()[0] * 0.5;
+    this.realRect.y = (this.b2Body.GetPosition().y * globals.BOX2D_SCALE) - this.image.getSize()[1] * 0.5;
+
+    // Forces!
+    this.vel.x = Math.cos(this.angle) * this.speed * (msDuration / 1000);
+
+    if (this.jumped) {
+        if (this.countJump < 1 && this.endJump) {
+            this.b2Body.ApplyForce(new box2d.b2Vec2(0, 0), this.b2Body.GetPosition());
+            //this.vel.y = -(Math.sin(this.angle) * this.speed * (msDuration / 1000));
+            this.vel.y = -8;
+            this.endJump = false;
+            this.countJump++;
+        }
+    }
+
+    if (this.b2Body.GetLinearVelocity().x === 0) {
+        this.countJump = 0;
+        this.endJump = true;
+    }
+
+    // Update the rect containing the sprite relative to the real award.
+    this.rect.top = Math.round(this.realRect.top);
+    this.rect.left = Math.round(this.realRect.left);
 
     // Collision detection and jumping
     /*
@@ -335,8 +363,10 @@ Player.prototype.update = function(msDuration) {
             this.canDrop = true;
         }
     }
-        // Basic directional movement
+
+    // Basic directional movement
     if (this.isRunning) {
+        console.log("Running");
         if (this.speed <= this.maxSpeed) {
             this.speed += (this.accel * this.maxSpeed);
         }
@@ -359,8 +389,8 @@ Player.prototype.update = function(msDuration) {
         this.angle = null;
     }
 
-    if (!this.isGrounded && this.currentAnimation!='jumping' ) {
-        this.animation.start('jumping');
+    if (!this.isGrounded && this.currentAnimation!='static' ) {
+        this.animation.start('static');
     }
 };
 
