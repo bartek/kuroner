@@ -8,19 +8,16 @@ var Physics = exports.Physics = function(element, scale) {
     this.context = element.getContext('2d');
     this.scale = scale || 30;
     this.dtRemaining = 0;
-    this.stepAmount = 1/60;
-
+    this.stepAmount = 1/24;
     return this;
 };
 
 Physics.prototype.step = function(dt) {
-    this.dtRemaining += dt;
-    while (this.dtRemaining > this.stepAmount) {
-        this.dtRemaining -= this.stepAmount;
-        this.world.Step(this.stepAmount,
-        8, // velocity iterations
-        3); // position iterations.
-    }
+    this.world.Step(this.stepAmount,
+    8, // velocity iterations
+    3); // position iterations.
+    this.world.ClearForces();
+
     if (this.debugDraw) {
         this.world.DrawDebugData();
     }

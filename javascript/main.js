@@ -26,7 +26,6 @@ var gBackground = null;
 var main = function() {
     gDisplay = gamejs.display.setMode([800, 600]);
 
-    gamejs.log(Physics);
     physics = new Physics(document.getElementById('gjs-canvas'));
     physics.debug();
 
