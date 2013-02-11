@@ -118,18 +118,6 @@ var tick = function(msDuration) {
         gameController.handle(event);
     });
 
-    physics.step(msDuration)
-
-    /*
-    // Update physics.
-    b2World.Step(
-        1 / 24, // frame rate
-        10, // velocity iterations
-        10 // position iterations.
-    );
-    */
-    //b2World.ClearForces();
-
     gMap.update(msDuration);
     gUnits.update(msDuration);
 
@@ -139,6 +127,8 @@ var tick = function(msDuration) {
 
     gMap.draw(gDisplay);
     gUnits.draw(gDisplay);
+
+    physics.step(msDuration)
 
     if (typeof gameController.angle() !== "undefined") {
         gPlayer.angle = gameController.angle();
