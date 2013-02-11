@@ -8,7 +8,7 @@ var gamejs = require('gamejs')
 
 var terminalVelocity = 10;
 
-var Unit = function(pos, spriteSheet, animation, objs, b2World) {
+var Unit = function(pos, spriteSheet, animation, objs, world) {
     Unit.superConstructor.apply(this, arguments);
 
     // Accel & Decel are a fraction of max speed added per tick - between 0 and 1
@@ -67,7 +67,7 @@ var Unit = function(pos, spriteSheet, animation, objs, b2World) {
             (this.realRect.height - b2Padding) * 0.5 / globals.BOX2D_SCALE
     );
 
-    this.b2Body = b2World.CreateBody(bodyDef);
+    this.b2Body = world.CreateBody(bodyDef);
     this.b2Body.CreateFixture(fixDef);
     this.b2Body.SetUserData(this);
     this.kind = 'player';
@@ -293,7 +293,7 @@ Unit.prototype.update = function(msDuration) {
     */
 };
 
-var Player = exports.Player = function(pos, spriteSheet, animation, objs, b2World) {
+var Player = exports.Player = function(pos, spriteSheet, animation, objs, world) {
     Player.superConstructor.apply(this, arguments);
 
     // Player attributes. These are modified by the players pain stage

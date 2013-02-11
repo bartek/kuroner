@@ -41,7 +41,7 @@ var TileMapModel = function() {
 
     // We need to know where to start for this map. The tile should be defined
     // by a `start:true` property.
-    this.startingPosition = [100, 0];
+    this.startingPosition = [20, 0];
 };
 
 TileMapModel.prototype.createMatrix = function(opts) {
@@ -148,7 +148,7 @@ TileMapModel.prototype.collisionTest = function(sprite) {
 };
 
 // Loads the Map at `url` and holds all layers.
-var Tile = function(rect, properties, b2World) {
+var Tile = function(rect, properties, world) {
     Tile.superConstructor.apply(this, arguments);
 
     var tilePadding = 1;
@@ -178,7 +178,7 @@ var Tile = function(rect, properties, b2World) {
                 (this.rect.height - tilePadding) * 0.5 / globals.BOX2D_SCALE
         );
 
-        this.b2Body = b2World.CreateBody(bodyDef);
+        this.b2Body = world.CreateBody(bodyDef);
         this.b2Body.CreateFixture(fixDef);
 
         this.b2Body.SetUserData(this);
@@ -191,8 +191,8 @@ objects.extend(Tile, gamejs.sprite.Sprite);
 
 var TileMap = exports.TileMap = new TileMapModel();
 
-var Map = exports.Map = function(url, b2World) {
-    this.b2World = b2World;
+var Map = exports.Map = function(url, world) {
+    this.world = world;
 
     // Draw each layer
     this.draw = function(display) {
@@ -266,7 +266,7 @@ var LayerView = function(map, layer, opts) {
                   [opts.tileWidth, opts.tileHeight]
                 );
                 this.surface.blit(tileSurface, tileRect);
-                var tile = new Tile(tileRect, tileProperties, map.b2World);
+                var tile = new Tile(tileRect, tileProperties, map.world);
 
                 // Push or ignore the tile. Only kept if its relevant.
                 TileMap.push(tile, tilePos, i, j);

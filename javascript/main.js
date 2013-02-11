@@ -1,15 +1,16 @@
 var gamejs = require('gamejs')
-    , box2d = require('./contrib/Box2dWeb-2.1.a.3')
     , globals = require('./globals')
     , view = require('./view')
     , TileMap = require('./view').TileMap
     , input = require('./input')
+    , Physics = require('./physics').Physics
     , Pickup = require('./actors').Pickup
     , Player = require('./actors').Player
     , EnemyManager = require('./enemy').EnemyManager
     , SpriteSheet = require('./actors').SpriteSheet;
 
-var b2World = null;
+var physics = null;
+
 var b2Draw = null;
 var b2Listener = null;
 
@@ -25,12 +26,11 @@ var gBackground = null;
 var main = function() {
     gDisplay = gamejs.display.setMode([800, 600]);
 
-    // Box2d.
-    b2World = new box2d.b2World(
-            new box2d.b2Vec2(0, 20), // gravity
-            true // allow sleep
-    );
+    gamejs.log(Physics);
+    physics = new Physics(document.getElementById('gjs-canvas'));
+    physics.debug();
 
+    /*
     var b2Listener = box2d.Box2D.Dynamics.b2ContactListener;
     b2Listener.BeginContact = function(contact) {
         //gamejs.log("BeginContact", contact.GetFixtureA().GetBody().GetUserData());
@@ -45,18 +45,11 @@ var main = function() {
         // PreSolve
     };
     b2World.SetContactListener(b2Listener);
-
-    var debugDraw = new box2d.b2DebugDraw();
-    debugDraw.SetSprite(document.getElementById("gjs-canvas").getContext("2d"));
-    debugDraw.SetDrawScale(globals.BOX2D_SCALE);
-    debugDraw.SetFillAlpha(0.3);
-    debugDraw.SetLineThickness(1.0);
-    debugDraw.SetFlags(box2d.b2DebugDraw.e_shapeBit | box2d.b2DebugDraw.e_jointBit);
-    b2World.SetDebugDraw(debugDraw);
+    */
 
     gBackground = gamejs.image.load('images/background1.jpg')
 
-    gMap = new view.Map('./data/cave.tmx', b2World);
+    gMap = new view.Map('./data/cave.tmx', physics.world);
 
     gUnits = new gamejs.sprite.Group();
     var objs = new gamejs.sprite.Group();
@@ -69,7 +62,7 @@ var main = function() {
             spriteSheet,
             animation,
             objs,
-            b2World
+            physics.world
         );
         gUnits.add(unit);
         return unit;
@@ -126,13 +119,17 @@ var tick = function(msDuration) {
         gameController.handle(event);
     });
 
+    physics.step(msDuration)
+
+    /*
     // Update physics.
     b2World.Step(
         1 / 24, // frame rate
         10, // velocity iterations
         10 // position iterations.
     );
-    b2World.ClearForces();
+    */
+    //b2World.ClearForces();
 
     gMap.update(msDuration);
     gUnits.update(msDuration);
@@ -143,8 +140,6 @@ var tick = function(msDuration) {
 
     gMap.draw(gDisplay);
     gUnits.draw(gDisplay);
-
-    b2World.DrawDebugData();
 
     if (typeof gameController.angle() !== "undefined") {
         gPlayer.angle = gameController.angle();
