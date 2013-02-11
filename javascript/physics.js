@@ -13,6 +13,7 @@ var Physics = exports.Physics = function(element, scale) {
 };
 
 Physics.prototype.step = function(dt) {
+    // What do these mean? See http://www.box2d.org/manual.html#_Toc253068188
     this.world.Step(this.stepAmount,
     8, // velocity iterations
     3); // position iterations.
