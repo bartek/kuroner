@@ -1,6 +1,8 @@
-// Modify gravity and speed, see what happens!
+// What happens if we modify the gravity of our world?
 window.gravityForce = 9.8;
 
+// Or let's change Finns jump height?
+window.jumpHeight = 8;
 
 var gamejs = require('gamejs')
     , globals = require('./globals')
@@ -34,23 +36,6 @@ var main = function() {
     physics = new Physics(document.getElementById('gjs-canvas'));
     //physics.debug();
 
-    /*
-    var b2Listener = box2d.Box2D.Dynamics.b2ContactListener;
-    b2Listener.BeginContact = function(contact) {
-        //gamejs.log("BeginContact", contact.GetFixtureA().GetBody().GetUserData());
-    };
-    b2Listener.EndContact = function(contact) {
-        //gamejs.log("EndContact", contact.GetFixtureA().GetBody().GetUserData());
-    };
-    b2Listener.PostSolve = function(contact, impulse) {
-        //gamejs.log("PostSolve", contact, impulse);
-    };
-    b2Listener.PreSolve = function(contact, oldManifold) {
-        // PreSolve
-    };
-    b2World.SetContactListener(b2Listener);
-    */
-
     gBackground = gamejs.image.load('./images/background-adventure.jpg');
 
     gMap = new view.Map('./data/mini.tmx', physics.world);
@@ -76,7 +61,8 @@ var main = function() {
             pos,
             spriteSheet,
             animation,
-            player
+            player,
+            physics.world
         );
         gObjs.add(unit);
         unit.decel = 0.02;
@@ -90,7 +76,7 @@ var main = function() {
     var rock_anims = {
         'static': [0]
     };
-    
+
     //The nitty gritties of our player character
     var filename = './images/sprite-finn.png';
     var dimensions = {width: 78, height: 94};
@@ -110,6 +96,11 @@ var main = function() {
         gObjs
     );
 
+    var jake_sheet = new SpriteSheet('./images/sprite-jake.png', 
+                                {width: 44, height: 50});
+    var jake_anims = { 'static': [0] };
+    objs_spawn(jake_sheet, [1050, 300], jake_anims, gPlayer);
+
     // Lasers and stuff.
     var enemies = new EnemyManager(gPlayer);
     gameController = new input.GameController(gPlayer);
@@ -125,6 +116,7 @@ var tick = function(msDuration) {
 
     gMap.update(msDuration);
     gUnits.update(msDuration);
+    gObjs.update(msDuration);
 
     // Draw!
     gDisplay.clear();
@@ -132,6 +124,7 @@ var tick = function(msDuration) {
 
     gMap.draw(gDisplay);
     gUnits.draw(gDisplay);
+    gObjs.draw(gDisplay);
 
     physics.step(msDuration)
 
@@ -146,6 +139,7 @@ var IMAGES = [
     // For the kids!
     './images/background-adventure.jpg',
     './images/sprite-finn.png',
+    './images/sprite-jake.png',
     './data/mininicular.png',
     // World
     './data/grasstilesheet.png',

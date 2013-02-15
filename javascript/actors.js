@@ -180,7 +180,7 @@ Unit.prototype.update = function(msDuration) {
             if (this.endJump) {
                 this.b2Body.SetLinearVelocity(this.vel);
             }
-            this.vel.y = -8;
+            this.vel.y = -(window.jumpHeight || 8);
             this.endJump = false;
             this.countJump++;
         }
