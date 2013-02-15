@@ -62,7 +62,7 @@ var Unit = function(pos, spriteSheet, animation, objs, world) {
     bodyDef.fixedRotation = true;
     fixDef.shape = new box2d.b2PolygonShape;
 
-    var b2Padding = 4;
+    var b2Padding = 30;
     fixDef.shape.SetAsBox(
             (this.realRect.width - b2Padding) * 0.5 / globals.BOX2D_SCALE,
             (this.realRect.height - b2Padding) * 0.5 / globals.BOX2D_SCALE
@@ -390,7 +390,6 @@ Player.prototype.update = function(msDuration) {
 var Pickup = exports.Pickup = function(pos, spriteSheet, animation, player) {
     Pickup.superConstructor.apply(this, arguments);
     this.player = player;
-    gamejs.log(player);
     this.isCarried = false;
 }
 objects.extend(Pickup, Unit);

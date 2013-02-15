@@ -1,4 +1,6 @@
+// Modify gravity and speed, see what happens!
 window.gravityForce = 9.8;
+
 
 var gamejs = require('gamejs')
     , globals = require('./globals')
@@ -19,6 +21,7 @@ var b2Listener = null;
 // objects and units
 var gPlayer = null;
 var gUnits = null;
+var gObjs = null;
 
 var gDisplay = null;
 var gMap = null;
@@ -53,7 +56,7 @@ var main = function() {
     gMap = new view.Map('./data/mini.tmx', physics.world);
 
     gUnits = new gamejs.sprite.Group();
-    var objs = new gamejs.sprite.Group();
+    gObjs = new gamejs.sprite.Group();
 
     // Spawn a character, normally our main player, but what if we 
     // want to introduce baddies?!
@@ -75,7 +78,7 @@ var main = function() {
             animation,
             player
         );
-        objs.add(unit);
+        gObjs.add(unit);
         unit.decel = 0.02;
         return unit;
     };
@@ -104,7 +107,7 @@ var main = function() {
         player_spriteSheet,
         player_pos,
         player_animation,
-        objs
+        gObjs
     );
 
     // Lasers and stuff.
@@ -137,37 +140,6 @@ var tick = function(msDuration) {
     }
     gPlayer.isRunning = gameController.isRunning();
     gPlayer.jumped = gameController.jumped();
-
-    /*
-    map.update(msDuration);
-    units.update(msDuration);
-    objs.update(msDuration);
-    enemies.update(msDuration);
-
-    // Collisions
-    enemies.collide();
-
-    // Draw
-    display.clear();
-    display.blit(background);
-
-    map.draw(display);
-    units.draw(display);
-    objs.draw(display);
-    enemies.draw(display);
-
-    //Get the input values from the game controller and apply to player
-    //undefined angle is bad - only set angle when it's defined
-    if (typeof gameController.angle() !== "undefined") {
-        player.angle = gameController.angle();
-    }
-
-    player.isRunning = gameController.isRunning();
-    player.isGrabbing = gameController.isGrabbing();
-    player.jumped = gameController.jumped();
-    player.climb = gameController.climb();
-    player.reset = gameController.reset();
-    */
 };
 
 var IMAGES = [

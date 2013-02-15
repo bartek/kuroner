@@ -41,7 +41,7 @@ var TileMapModel = function() {
 
     // We need to know where to start for this map. The tile should be defined
     // by a `start:true` property.
-    this.startingPosition = [100, 0];
+    this.startingPosition = [90, 200];
 };
 
 TileMapModel.prototype.createMatrix = function(opts) {
