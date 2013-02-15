@@ -1,3 +1,5 @@
+window.gravityForce = 9.8;
+
 var gamejs = require('gamejs')
     , globals = require('./globals')
     , view = require('./view')
@@ -48,7 +50,7 @@ var main = function() {
 
     gBackground = gamejs.image.load('./images/background-adventure.jpg');
 
-    gMap = new view.Map('./data/cave.tmx', physics.world);
+    gMap = new view.Map('./data/mini.tmx', physics.world);
 
     gUnits = new gamejs.sprite.Group();
     var objs = new gamejs.sprite.Group();
@@ -88,7 +90,7 @@ var main = function() {
     
     //The nitty gritties of our player character
     var filename = './images/sprite-finn.png';
-    var dimensions = {width: 96, height: 94};
+    var dimensions = {width: 78, height: 94};
     var player_pos = TileMap.startingPosition;
     var player_spriteSheet = new SpriteSheet(filename, dimensions);
     var player_animation = {
@@ -172,6 +174,7 @@ var IMAGES = [
     // For the kids!
     './images/background-adventure.jpg',
     './images/sprite-finn.png',
+    './data/mininicular.png',
     // World
     './data/grasstilesheet.png',
     './data/set-cave_bright.png',

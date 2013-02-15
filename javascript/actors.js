@@ -154,7 +154,6 @@ Unit.prototype.setState = function() {
 }
 
 Unit.prototype.moveUnit = function(msDuration) {
-    gamejs.log(this.vel.x, this.vel.y);
     this.b2Body.ApplyForce(this.vel, this.b2Body.GetPosition());
     this.b2Body.SetLinearDamping(1.5);
 

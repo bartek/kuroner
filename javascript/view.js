@@ -41,7 +41,7 @@ var TileMapModel = function() {
 
     // We need to know where to start for this map. The tile should be defined
     // by a `start:true` property.
-    this.startingPosition = [20, 0];
+    this.startingPosition = [100, 0];
 };
 
 TileMapModel.prototype.createMatrix = function(opts) {
@@ -72,7 +72,7 @@ TileMapModel.prototype.push = function(tile, tilePos, i, j) {
 
         // Add tile to the matrix. For simplicity sake at this point, simply add it
         // as a BLOCK.always tile if there is a blocking property on it.
-        this.matrix[i][j] = BLOCK.always;
+        //this.matrix[i][j] = BLOCK.always;
       }
       if (tile.properties.pain) {
         this.deadlyTiles.add(tile);
