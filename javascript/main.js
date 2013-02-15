@@ -87,13 +87,13 @@ var main = function() {
     };
     
     //The nitty gritties of our player character
-    var filename = 'images/MegaMan7Sheet4.png';
-    var dimensions = {width:42, height:50};
+    var filename = './images/sprite-finn.png';
+    var dimensions = {width: 96, height: 94};
     var player_pos = TileMap.startingPosition;
     var player_spriteSheet = new SpriteSheet(filename, dimensions);
     var player_animation = {
         'static': [0],
-        'running':[5,14],
+        'running':[1,3], //5,14],
         'jumping':[18]
     };
 
@@ -171,6 +171,7 @@ var tick = function(msDuration) {
 var IMAGES = [
     // For the kids!
     './images/background-adventure.jpg',
+    './images/sprite-finn.png',
     // World
     './data/grasstilesheet.png',
     './data/set-cave_bright.png',
