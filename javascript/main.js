@@ -69,14 +69,6 @@ var main = function() {
         return unit;
     };
 
-    var rock_file = 'images/rock.png';
-    var rock_dims = {width:32, height:32};
-    var rock_pos = [100,0];
-    var rock_sheet = new SpriteSheet(rock_file, rock_dims);
-    var rock_anims = {
-        'static': [0]
-    };
-
     //The nitty gritties of our player character
     var filename = './images/sprite-finn.png';
     var dimensions = {width: 78, height: 94};
@@ -146,7 +138,6 @@ var IMAGES = [
     './data/set-cave_bright.png',
     'images/meatboy.png',
     'images/MegaMan7Sheet4.png',
-    'images/rock.png',
     'images/background1.jpg',
 ];
 
