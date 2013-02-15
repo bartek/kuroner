@@ -50,14 +50,14 @@ var main = function() {
     };
     
     //The nitty gritties of our player character
-    var filename = 'images/MegaMan7Sheet4.png';
-    var dimensions = {width:42, height:50};
+    var filename = 'images/finn_01.png';
+    var dimensions = {width:25, height:26};
     var player_pos = TileMap.startingPosition;
     var player_spriteSheet = new SpriteSheet(filename, dimensions);
     var player_animation = {
         'static': [0],
-        'running':[5,14],
-        'jumping':[18]
+        'running':[1,4],
+        'jumping':[0]
     };
 
     // Rise!
@@ -121,7 +121,7 @@ var IMAGES = [
     // World
     './data/grasstilesheet.png',
     'images/meatboy.png',
-    'images/MegaMan7Sheet4.png',
+    'images/finn_01.png',
     'images/rock.png',
     'images/background1.jpg',
 ];
