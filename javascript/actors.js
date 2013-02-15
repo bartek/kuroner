@@ -59,6 +59,7 @@ var Unit = function(pos, spriteSheet, animation, objs, world) {
     bodyDef.type = box2d.b2Body.b2_dynamicBody;
     bodyDef.position.x = this.realRect.center[0] / globals.BOX2D_SCALE;
     bodyDef.position.y = this.realRect.center[1] / globals.BOX2D_SCALE;
+    bodyDef.fixedRotation = true;
     fixDef.shape = new box2d.b2PolygonShape;
 
     var b2Padding = 4;
@@ -78,7 +79,6 @@ var Unit = function(pos, spriteSheet, animation, objs, world) {
 
     this.dy = 0.0;
 
-    console.log(pos);
     return this;
 };
 objects.extend(Unit, gamejs.sprite.Sprite);
@@ -154,16 +154,18 @@ Unit.prototype.setState = function() {
 }
 
 Unit.prototype.moveUnit = function(msDuration) {
-    gamejs.log("moveUnit", this.angle, this.speed);
-    var x = Math.cos(this.angle) * this.speed * (msDuration / 1000);
-    var y = Math.sin(this.angle) * this.speed * (msDuration / 1000) + this.dy;
-    this.realRect.moveIp(x, y);
-    return [x, y];
+    gamejs.log(this.vel.x, this.vel.y);
+    this.b2Body.ApplyForce(this.vel, this.b2Body.GetPosition());
+    this.b2Body.SetLinearDamping(1.5);
+
+    this.vel.x = Math.cos(this.angle) * this.speed * (msDuration / 1000);
+
+    var x = (this.b2Body.GetPosition().x * globals.BOX2D_SCALE) - this.image.getSize()[0] * 0.5;
+    var y = (this.b2Body.GetPosition().y * globals.BOX2D_SCALE) - this.image.getSize()[1] * 0.5;
+    return {x: x, y: y};
 }
 
 Unit.prototype.update = function(msDuration) {
-    //gamejs.log("Vel", this.vel);
-
     // Sprite animation
     this.animation.update(msDuration);
     this.image = this.animation.image;
@@ -174,31 +176,26 @@ Unit.prototype.update = function(msDuration) {
         this.image = gamejs.transform.flip(this.image, true, false);
     }
 
-    // Box2d updates.
-    this.realRect.x = (this.b2Body.GetPosition().x * globals.BOX2D_SCALE) - this.image.getSize()[0] * 0.5;
-    this.realRect.y = (this.b2Body.GetPosition().y * globals.BOX2D_SCALE) - this.image.getSize()[1] * 0.5;
-
-    // Forces!
-    this.vel.x = Math.cos(this.angle) * this.speed * (msDuration / 1000);
-
     if (this.jumped) {
         if (this.countJump < 1 && this.endJump) {
-            this.b2Body.ApplyForce(new box2d.b2Vec2(0, 0), this.b2Body.GetPosition());
-            //this.vel.y = -(Math.sin(this.angle) * this.speed * (msDuration / 1000));
+            if (this.endJump) {
+                this.b2Body.SetLinearVelocity(this.vel);
+            }
             this.vel.y = -8;
             this.endJump = false;
             this.countJump++;
         }
     }
 
-    if (this.b2Body.GetLinearVelocity().x === 0) {
+    if (this.b2Body.GetLinearVelocity().y === 0) {
         this.countJump = 0;
         this.endJump = true;
     }
 
+    var pos = this.moveUnit(msDuration);
     // Update the rect containing the sprite relative to the real award.
-    this.rect.top = Math.round(this.realRect.top);
-    this.rect.left = Math.round(this.realRect.left);
+    this.rect.x = pos.x;
+    this.rect.y = pos.y;
 
     // Collision detection and jumping
     /*
@@ -282,12 +279,6 @@ Unit.prototype.update = function(msDuration) {
     this.previousX = this.realRect.x;
     this.previousY = this.realRect.y;
 
-    this.moveUnit(msDuration);
-
-    // Set the position of the rendered rectangle to a rounded version of the 
-    // exact rect
-    this.rect.top = Math.round(this.realRect.top);
-    this.rect.left = Math.round(this.realRect.left);
 
     this.setCollisionPoints();
     */
@@ -340,6 +331,7 @@ Player.prototype.update = function(msDuration) {
       this.setDeath();
     }
 
+    /*
     objs_colliding = gamejs.sprite.spriteCollide(this, this.objs, false);
 
     if (this.canLift && objs_colliding.length > 0) {
@@ -363,10 +355,10 @@ Player.prototype.update = function(msDuration) {
             this.canDrop = true;
         }
     }
+    */
 
     // Basic directional movement
     if (this.isRunning) {
-        console.log("Running");
         if (this.speed <= this.maxSpeed) {
             this.speed += (this.accel * this.maxSpeed);
         }
@@ -389,9 +381,11 @@ Player.prototype.update = function(msDuration) {
         this.angle = null;
     }
 
+    /*
     if (!this.isGrounded && this.currentAnimation!='static' ) {
         this.animation.start('static');
     }
+    */
 };
 
 var Pickup = exports.Pickup = function(pos, spriteSheet, animation, player) {

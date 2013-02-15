@@ -24,10 +24,10 @@ var gameController = null;
 var gBackground = null;
 
 var main = function() {
-    gDisplay = gamejs.display.setMode([800, 600]);
+    gDisplay = gamejs.display.setMode([window.innerWidth, window.innerHeight]);
 
     physics = new Physics(document.getElementById('gjs-canvas'));
-    physics.debug();
+    //physics.debug();
 
     /*
     var b2Listener = box2d.Box2D.Dynamics.b2ContactListener;
@@ -46,7 +46,7 @@ var main = function() {
     b2World.SetContactListener(b2Listener);
     */
 
-    gBackground = gamejs.image.load('images/background1.jpg')
+    gBackground = gamejs.image.load('./images/background-adventure.jpg');
 
     gMap = new view.Map('./data/cave.tmx', physics.world);
 
@@ -169,6 +169,8 @@ var tick = function(msDuration) {
 };
 
 var IMAGES = [
+    // For the kids!
+    './images/background-adventure.jpg',
     // World
     './data/grasstilesheet.png',
     './data/set-cave_bright.png',
