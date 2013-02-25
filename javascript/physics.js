@@ -4,7 +4,7 @@ var box2d = require('./contrib/Box2dWeb-2.1.a.3')
 var Physics = exports.Physics = function(element, scale) {
     // Adjust threshold so characters don't "stick" to walls
     box2d.Box2D.Common.b2Settings.b2_velocityThreshold = 0.9;
-    var gravity = new box2d.b2Vec2(0, window.gravityForce);
+    var gravity = new box2d.b2Vec2(0, 9.8);
     this.world = new box2d.b2World(gravity, true);
     this.element = element;
     this.context = element.getContext('2d');

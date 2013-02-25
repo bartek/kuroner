@@ -1,9 +1,3 @@
-// What happens if we modify the gravity of our world?
-window.gravityForce = 9.8;
-
-// Or let's change Finns jump height?
-window.jumpHeight = 8;
-
 var gamejs = require('gamejs')
     , globals = require('./globals')
     , view = require('./view')
@@ -34,7 +28,7 @@ var main = function() {
     gDisplay = gamejs.display.setMode([window.innerWidth, window.innerHeight]);
 
     physics = new Physics(document.getElementById('gjs-canvas'));
-    //physics.debug();
+    physics.debug();
 
     gBackground = gamejs.image.load('./images/background-adventure.jpg');
 

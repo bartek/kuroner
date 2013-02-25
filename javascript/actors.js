@@ -34,7 +34,7 @@ var Unit = function(pos, spriteSheet, animation, objs, world) {
     this.angle = null;
 
     this.maxSpeed = 200;
-    this.jumpHeight = 12;
+    this.jumpHeight = 8;
 
     this.origImage = spriteSheet.get(0);
     this.animation = new Animation(spriteSheet, animation, 12);
@@ -72,7 +72,8 @@ var Unit = function(pos, spriteSheet, animation, objs, world) {
     this.b2Body.CreateFixture(fixDef);
     this.b2Body.SetUserData(this);
     this.kind = 'player';
-    this.vel = this.b2Body.GetLinearVelocity();
+
+    this.velVector = this.b2Body.GetLinearVelocity();
 
     // Action state attributes
     this.canJump = false;
@@ -153,11 +154,12 @@ Unit.prototype.setState = function() {
     }
 }
 
+// Move an object using box2d physics.
 Unit.prototype.moveUnit = function(msDuration) {
-    this.b2Body.ApplyForce(this.vel, this.b2Body.GetPosition());
+    this.b2Body.ApplyForce(this.velVector, this.b2Body.GetWorldCenter()); //GetPosition());
     this.b2Body.SetLinearDamping(1.5);
 
-    this.vel.x = Math.cos(this.angle) * this.speed * (msDuration / 1000);
+    this.velVector.x = Math.cos(this.angle) * this.speed * (msDuration / 1000);
 
     var x = (this.b2Body.GetPosition().x * globals.BOX2D_SCALE) - this.image.getSize()[0] * 0.5;
     var y = (this.b2Body.GetPosition().y * globals.BOX2D_SCALE) - this.image.getSize()[1] * 0.5;
@@ -178,9 +180,9 @@ Unit.prototype.update = function(msDuration) {
     if (this.jumped) {
         if (this.countJump < 1 && this.endJump) {
             if (this.endJump) {
-                this.b2Body.SetLinearVelocity(this.vel);
+                this.b2Body.SetLinearVelocity(this.velVector);
             }
-            this.vel.y = -(window.jumpHeight || 8);
+            this.velVector.y = -this.jumpHeight;
             this.endJump = false;
             this.countJump++;
         }
