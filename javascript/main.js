@@ -118,7 +118,7 @@ var tick = function(msDuration) {
         gPlayer.angle = gameController.angle();
     }
     gPlayer.isRunning = gameController.isRunning();
-    gPlayer.jumped = gameController.jumped();
+    gPlayer.hasJumped = gameController.jumped();
 };
 
 var IMAGES = [

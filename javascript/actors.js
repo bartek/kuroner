@@ -20,18 +20,23 @@ var Unit = function(pos, spriteSheet, animation, objs, world) {
     this.isFalling = false;
     this.isAscending = false;
     this.isGrounded = false;
+    this.isJumping = false;
     this.isMovingLeft = false;
     this.isMovingRight = false;
     this.isGrabbing = false;
     this.canDrop = false;
 
     this.countJump = 0;
+    this.hasJumped = false;
     this.endJump = true;
 
     // States controlled by the controller.
     this.isRunning;
-    this.jumped;
     this.angle = null;
+
+    // TODO: It should be adjusted so that friction is only 0 when jumping, so it
+    // gives a "super mario" effect.
+    this._defaultFriction = 0;
 
     this.maxSpeed = 200;
     this.jumpHeight = 8;
@@ -52,7 +57,7 @@ var Unit = function(pos, spriteSheet, animation, objs, world) {
     // Setup box2d.
     var fixDef = new box2d.b2FixtureDef;
     fixDef.density = 1.0;
-    fixDef.friction = 0.5;
+    fixDef.friction = this._defaultFriction;
     fixDef.restitution = 0.2;
 
     var bodyDef = new box2d.b2BodyDef;
@@ -145,6 +150,10 @@ Unit.prototype.setState = function() {
       this.isAscending = true;
     }
 
+    if (this.b2Body.GetLinearVelocity().y === 0) {
+        this.isGrounded = true;
+    }
+
     if (this.angle == Math.PI) {
       this.isMovingLeft = true;
       this.isMovingRight = false;
@@ -177,7 +186,8 @@ Unit.prototype.update = function(msDuration) {
         this.image = gamejs.transform.flip(this.image, true, false);
     }
 
-    if (this.jumped) {
+    // Jumping!
+    if (this.hasJumped) {
         if (this.countJump < 1 && this.endJump) {
             if (this.endJump) {
                 this.b2Body.SetLinearVelocity(this.velVector);
@@ -188,7 +198,7 @@ Unit.prototype.update = function(msDuration) {
         }
     }
 
-    if (this.b2Body.GetLinearVelocity().y === 0) {
+    if (this.isGrounded) {
         this.countJump = 0;
         this.endJump = true;
     }
