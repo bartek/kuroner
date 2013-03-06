@@ -45,7 +45,7 @@ var main = function() {
             spriteSheet,
             animation,
             objs,
-            physics.world
+            physics
         );
         gUnits.add(unit);
         return unit;
@@ -56,7 +56,7 @@ var main = function() {
             spriteSheet,
             animation,
             player,
-            physics.world
+            physics
         );
         gObjs.add(unit);
         unit.decel = 0.02;

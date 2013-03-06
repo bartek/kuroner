@@ -1,5 +1,4 @@
 var gamejs = require('gamejs')
-    , box2d = require('./contrib/Box2dWeb-2.1.a.3')
     , objects = require('gamejs/utils/objects')
     , TileMap = require('./view').TileMap
     , Animation = require('./animate').Animation
@@ -8,7 +7,7 @@ var gamejs = require('gamejs')
 
 var terminalVelocity = 10;
 
-var Unit = function(pos, spriteSheet, animation, objs, world) {
+var Unit = function(pos, spriteSheet, animation, objs, physics) {
     Unit.superConstructor.apply(this, arguments);
 
     // Accel & Decel are a fraction of max speed added per tick - between 0 and 1
@@ -54,27 +53,9 @@ var Unit = function(pos, spriteSheet, animation, objs, world) {
     this.previousX = this.realRect.x;
     this.previousY = this.realRect.y;
 
-    // Setup box2d.
-    var fixDef = new box2d.b2FixtureDef;
-    fixDef.density = 1.0;
-    fixDef.friction = this._defaultFriction;
-    fixDef.restitution = 0.2;
-
-    var bodyDef = new box2d.b2BodyDef;
-    bodyDef.type = box2d.b2Body.b2_dynamicBody;
-    bodyDef.position.x = this.realRect.center[0] / globals.BOX2D_SCALE;
-    bodyDef.position.y = this.realRect.center[1] / globals.BOX2D_SCALE;
-    bodyDef.fixedRotation = true;
-    fixDef.shape = new box2d.b2PolygonShape;
-
-    var b2Padding = 30;
-    fixDef.shape.SetAsBox(
-            (this.realRect.width - b2Padding) * 0.5 / globals.BOX2D_SCALE,
-            (this.realRect.height - b2Padding) * 0.5 / globals.BOX2D_SCALE
-    );
-
-    this.b2Body = world.CreateBody(bodyDef);
-    this.b2Body.CreateFixture(fixDef);
+    this.b2Body = physics.createBody(this.realRect, 'dynamic', {
+        friction: this._defaultFriction
+    });
     this.b2Body.SetUserData(this);
     this.kind = 'player';
 
@@ -295,7 +276,7 @@ Unit.prototype.update = function(msDuration) {
     */
 };
 
-var Player = exports.Player = function(pos, spriteSheet, animation, objs, world) {
+var Player = exports.Player = function(pos, spriteSheet, animation, objs, physics) {
     Player.superConstructor.apply(this, arguments);
 
     // Player attributes. These are modified by the players pain stage
