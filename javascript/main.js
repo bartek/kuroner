@@ -11,13 +11,9 @@ var gamejs = require('gamejs')
 
 var physics = null;
 
-var b2Draw = null;
-var b2Listener = null;
-
 // objects and units
 var gPlayer = null;
 var gUnits = null;
-var gObjs = null;
 
 var gDisplay = null;
 var gMap = null;
@@ -28,38 +24,24 @@ var main = function() {
     gDisplay = gamejs.display.setMode([window.innerWidth, window.innerHeight]);
 
     physics = new Physics(document.getElementById('gjs-canvas'));
-    physics.debug();
+    //physics.debug();
 
     gBackground = gamejs.image.load('./images/background-adventure.jpg');
 
     gMap = new view.Map('./data/mini.tmx', physics.world);
 
     gUnits = new gamejs.sprite.Group();
-    gObjs = new gamejs.sprite.Group();
 
     // Spawn a character, normally our main player, but what if we 
     // want to introduce baddies?!
-    var spawn = function(spriteSheet, pos, animation, objs) {
+    var spawn = function(spriteSheet, pos, animation) {
         var unit = new Player(
             pos,
             spriteSheet,
             animation,
-            objs,
             physics
         );
         gUnits.add(unit);
-        return unit;
-    };
-    var objs_spawn = function(spriteSheet, pos, animation, player) {
-        var unit = new Pickup(
-            pos,
-            spriteSheet,
-            animation,
-            player,
-            physics
-        );
-        gObjs.add(unit);
-        unit.decel = 0.02;
         return unit;
     };
 
@@ -78,14 +60,8 @@ var main = function() {
     gPlayer = spawn(
         player_spriteSheet,
         player_pos,
-        player_animation,
-        gObjs
+        player_animation
     );
-
-    var jake_sheet = new SpriteSheet('./images/sprite-jake.png', 
-                                {width: 44, height: 50});
-    var jake_anims = { 'static': [0] };
-    objs_spawn(jake_sheet, [1050, 300], jake_anims, gPlayer);
 
     // Lasers and stuff.
     var enemies = new EnemyManager(gPlayer);
@@ -102,7 +78,6 @@ var tick = function(msDuration) {
 
     gMap.update(msDuration);
     gUnits.update(msDuration);
-    gObjs.update(msDuration);
 
     // Draw!
     gDisplay.clear();
@@ -110,7 +85,6 @@ var tick = function(msDuration) {
 
     gMap.draw(gDisplay);
     gUnits.draw(gDisplay);
-    gObjs.draw(gDisplay);
 
     physics.step(msDuration)
 

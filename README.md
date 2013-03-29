@@ -1,7 +1,5 @@
 kuroner
 ===
 
-A platformer in the works. Aspects of cloning, multiplication, whatever we decide.
-
-Originally built for the GitHub game-off, but never finished, or submitted. We learned a
-lot though!
+A platformer in the works. No real definition of what it's to do yet, mostly a
+tech demo.

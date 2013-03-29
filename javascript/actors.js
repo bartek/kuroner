@@ -5,9 +5,7 @@ var gamejs = require('gamejs')
     , globals = require('./globals')
     , config = require('./config').config;
 
-var terminalVelocity = 10;
-
-var Unit = function(pos, spriteSheet, animation, objs, physics) {
+var Unit = function(pos, spriteSheet, animation, physics) {
     Unit.superConstructor.apply(this, arguments);
 
     // Accel & Decel are a fraction of max speed added per tick - between 0 and 1
@@ -188,120 +186,16 @@ Unit.prototype.update = function(msDuration) {
     // Update the rect containing the sprite relative to the real award.
     this.rect.x = pos.x;
     this.rect.y = pos.y;
-
-    // Collision detection and jumping
-    /*
-    this.colliding = TileMap.collisionTest(this);
-
-    // We have the side of the tile the player is colliding with. With this, we
-    // can determine if we should stop them on the ground, let them continue
-    // falling, etc.
-    // We need to check if the object is colliding, but also from which side,
-    // otherwise it gets really wonky trying to determine how we want to handle
-    // dy, etc.
-    if (this.colliding.blocking.length > 0) {
-      var colBottom = this.colliding.blocking.indexOf("bottom") > -1;
-      var colRight = this.colliding.blocking.indexOf("right") > -1;
-      var colLeft = this.colliding.blocking.indexOf("left") > -1;
-      var tolTop = this.colliding.blocking.indexOf("top") > -1;
-
-      var actBottom = function(that) {
-        that.isGrounded = true;
-        that.dy = 0;
-      }
-
-      var actRight = function(that) {
-        that.speed = 0;
-        that.realRect.moveIp(-1, 0);
-      }
-
-      var actLeft = function(that) {
-        that.speed = 0;
-        that.realRect.moveIp(1, 0);
-      }
-
-      // TODO: Note. Perhaps use the BLOCKS idea to determine which directions
-      // of collisions are happening. Then, we can simply call the correct
-      // functions instead of managing a massive if statement.
-
-      // This is going to get messy, checking so many directions. Better ideas?
-      if (colBottom && colRight) {
-        gamejs.log("Bottom and right collision");
-        actBottom(this);
-        actRight(this);
-      } else if (colBottom && colLeft) {
-        actBottom(this);
-        actLeft(this);
-      } else if (colBottom) {
-        actBottom(this);
-      } else if (colRight) {
-        actRight(this);
-      } else if (colLeft) {
-        actLeft(this);
-      } else if (this.isAscending) {
-        this.isGrounded = false;
-      }
-    } else {
-      this.isGrounded = false;
-    }
-
-    if (this.isGrounded) {
-      if (this.jumped) {
-        if (this.canJump) {
-          this.dy = -this.jumpHeight;
-          this.canJump = false;
-        };
-      } else {
-        this.canJump = true;
-      }
-    };
-
-    if (!this.isGrounded) {
-        this.dy += 0.5;
-    };
-
-    if (this.jumped && !this.isGrounded && this.dy > 0) {
-        this.dy -=  0.1;
-    };
-
-    if (this.dy > terminalVelocity) {
-        this.dy = terminalVelocity;
-    };
-
-    this.previousX = this.realRect.x;
-    this.previousY = this.realRect.y;
-
-
-    this.setCollisionPoints();
-    */
 };
 
-var Player = exports.Player = function(pos, spriteSheet, animation, objs, physics) {
+var Player = exports.Player = function(pos, spriteSheet, animation, physics) {
     Player.superConstructor.apply(this, arguments);
 
     // Player attributes. These are modified by the players pain stage
     this.painStage = 0;
     this.canLift = true;
-
-    this.objs = objs;
 };
 objects.extend(Player, Unit);
-
-Player.prototype.updatePainStage = function() {
-  this.painStage += 1;
-
-  gamejs.log("Pain Stage", this.painStage);
-
-  if (this.painStage === 1) {
-    this.maxSpeed = 150;
-    this.canLift = true;
-    this.jumpHeight = 10;
-  } else if (this.painStage === 2) {
-    this.maxSpeed = 100;
-    this.canLift = false;
-    this.jumpHeight = 8;
-  }
-};
 
 // Player has been killed in some manner. Play death animation and reset the
 // player in a position that is available (e.g. not a tile that could kill the
@@ -311,8 +205,6 @@ Unit.prototype.setDeath = function() {
 
     this.realRect.x = x;
     this.realRect.y = y;
-
-    this.updatePainStage();
 }
 
 Player.prototype.update = function(msDuration) {
@@ -322,32 +214,6 @@ Player.prototype.update = function(msDuration) {
     if (this.reset) {
       this.setDeath();
     }
-
-    /*
-    objs_colliding = gamejs.sprite.spriteCollide(this, this.objs, false);
-
-    if (this.canLift && objs_colliding.length > 0) {
-        if (this.isGrabbing) {
-            if (this.canDrop) {
-                if (objs_colliding[0].isCarried){
-                    objs_colliding[0].isCarried = false;
-                    if (this.isMovingRight) {
-                        arc_angle = -(Math.PI/4);
-                    } else if (this.isMovingLeft) {
-                        arc_angle = Math.PI + (Math.PI/4);
-                    }
-                    objs_colliding[0].angle = arc_angle;
-                    objs_colliding[0].speed = 250 + this.speed;
-                } else {
-                    objs_colliding[0].isCarried = true;
-                }
-                this.canDrop = false;
-            }
-        } else {
-            this.canDrop = true;
-        }
-    }
-    */
 
     // Basic directional movement
     if (this.isRunning) {
@@ -372,12 +238,6 @@ Player.prototype.update = function(msDuration) {
     if (this.speed == 0) {
         this.angle = null;
     }
-
-    /*
-    if (!this.isGrounded && this.currentAnimation!='static' ) {
-        this.animation.start('static');
-    }
-    */
 };
 
 var Pickup = exports.Pickup = function(pos, spriteSheet, animation, player) {
