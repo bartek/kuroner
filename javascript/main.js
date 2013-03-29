@@ -1,5 +1,6 @@
 var gamejs = require('gamejs')
     , globals = require('./globals')
+    , config = require('./config')
     , view = require('./view')
     , TileMap = require('./view').TileMap
     , input = require('./input')
@@ -32,36 +33,9 @@ var main = function() {
 
     gUnits = new gamejs.sprite.Group();
 
-    // Spawn a character, normally our main player, but what if we 
-    // want to introduce baddies?!
-    var spawn = function(spriteSheet, pos, animation) {
-        var unit = new Player(
-            pos,
-            spriteSheet,
-            animation,
-            physics
-        );
-        gUnits.add(unit);
-        return unit;
-    };
-
-    //The nitty gritties of our player character
-    var filename = './images/sprite-finn.png';
-    var dimensions = {width: 78, height: 94};
-    var player_pos = TileMap.startingPosition;
-    var player_spriteSheet = new SpriteSheet(filename, dimensions);
-    var player_animation = {
-        'static': [0],
-        'running':[1,3], //5,14],
-        'jumping':[18]
-    };
-
-    // Rise!
-    gPlayer = spawn(
-        player_spriteSheet,
-        player_pos,
-        player_animation
-    );
+    // Spawn our main player.
+    gPlayer = Player.Spawn(config.actors.finn, TileMap.startingPosition, physics);
+    gUnits.add(gPlayer);
 
     // Lasers and stuff.
     var enemies = new EnemyManager(gPlayer);
@@ -95,20 +69,5 @@ var tick = function(msDuration) {
     gPlayer.hasJumped = gameController.jumped();
 };
 
-var IMAGES = [
-    // For the kids!
-    './images/background-adventure.jpg',
-    './images/sprite-finn.png',
-    './images/sprite-jake.png',
-    './data/mininicular.png',
-    // World
-    './data/grasstilesheet.png',
-    './data/set-cave_bright.png',
-    'images/meatboy.png',
-    'images/MegaMan7Sheet4.png',
-    'images/background1.jpg',
-];
-
-
-gamejs.preload(IMAGES);
+gamejs.preload(config.IMAGES);
 gamejs.ready(main);

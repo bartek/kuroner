@@ -197,6 +197,17 @@ var Player = exports.Player = function(pos, spriteSheet, animation, physics) {
 };
 objects.extend(Player, Unit);
 
+Player.Spawn = function(actor, pos, physics) {
+    var player = new Player(
+        pos,
+        new SpriteSheet(actor.filename, actor.dimensions),
+        actor.animation,
+        physics
+    );
+    return player;
+}
+
+
 // Player has been killed in some manner. Play death animation and reset the
 // player in a position that is available (e.g. not a tile that could kill the
 // player.) 
