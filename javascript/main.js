@@ -8,6 +8,7 @@ var gamejs = require('gamejs')
     , Pickup = require('./actors').Pickup
     , Player = require('./actors').Player
     , EnemyManager = require('./enemy').EnemyManager
+    , Camera = require('./contrib/camera').Camera
     , SpriteSheet = require('./actors').SpriteSheet;
 
 var physics = null;
@@ -20,9 +21,19 @@ var gDisplay = null;
 var gMap = null;
 var gameController = null;
 var gBackground = null;
+var gCamera = null;
+var gSurface = null;
 
 var main = function() {
-    gDisplay = gamejs.display.setMode([window.innerWidth, window.innerHeight]);
+    var width = window.innerWidth
+        , height = window.innerHeight;
+
+    gDisplay = gamejs.display.setMode([width, height]);
+    gSurface = new gamejs.Surface([width, height]);
+    gCamera = new Camera(gSurface, {
+        width: width,
+        height: height
+    });
 
     physics = new Physics(document.getElementById('gjs-canvas'));
     //physics.debug();
@@ -52,13 +63,21 @@ var tick = function(msDuration) {
 
     gMap.update(msDuration);
     gUnits.update(msDuration);
+    gCamera.update(msDuration);
+    gCamera.follow([gPlayer.rect.x, gPlayer.rect.y]);
 
-    // Draw!
+    // Draw! The idea here with the camera class is that we have to blit
+    // everything onto the surface that we've given the camera class. Then
+    // finally, once ready, we blit the constrainted view surface from the
+    // camera module onto our main gDisplay
     gDisplay.clear();
-    gDisplay.blit(gBackground);
+    gSurface.blit(gBackground);
 
-    gMap.draw(gDisplay);
-    gUnits.draw(gDisplay);
+    gMap.draw(gSurface);
+    gUnits.draw(gSurface);
+
+    var view = gCamera.draw();
+    gDisplay.blit(view);
 
     physics.step(msDuration)
 
